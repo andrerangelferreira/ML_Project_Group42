@@ -20,7 +20,7 @@ Nova IMS | MSc in Data Science | 2025/2026
 
 ---
 
-## 👥 Group Members
+## Group Members
 | Name | Student ID | Contribution |
 |------|-------------|--------------|
 | André Ferreira | — | — |
@@ -29,11 +29,11 @@ Nova IMS | MSc in Data Science | 2025/2026
 
 ---
 
-## 📅 Deadlines
+## Deadlines
 - **Handout Submission:** November 3, 2025 (17:59)  
 - **Target (early submission):** October 27, 2025  
 
 ---
 
-## 🧰 Requirements
+## Requirements
 The project was developed in **Python 3.11** using the following key libraries:
