@@ -9,7 +9,7 @@ Nova IMS | MSc in Data Science | 2025/2026
 
 ---
 
-## 🧮 Project Notebooks
+## Project Notebooks
 | Stage | Notebook | Description |
 |--------|-----------|-------------|
 | Data Understanding | [01_data_understanding.ipynb](notebooks/01_data_understanding.ipynb) | Exploratory Data Analysis |
