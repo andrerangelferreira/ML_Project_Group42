@@ -2,7 +2,6 @@
 Machine Learning Project - Group 42 
 Nova IMS | MSc in Data Science | 2025/2026
 
----
 
 ## 🧭 Business Needs
 *Cars 4 You* wants to automate the process of car evaluation by developing a regression model that predicts the purchase price of a car using customer-provided details.
