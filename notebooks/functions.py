@@ -14,3 +14,4 @@ def normalize_text(x):
     x = re.sub(r'[^a-z0-9\s\-]', '', x)  # keep alphanumeric & hyphens
     x = re.sub(r'\s+', ' ', x)  # collapse multiple spaces
     return x
+
