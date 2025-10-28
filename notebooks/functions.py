@@ -15,8 +15,6 @@ def normalize_text(x):
     x = re.sub(r'\s+', ' ', x)  # collapse multiple spaces
     return x
 
-<<<<<<< Updated upstream
-=======
 def num_per_cat(data, numerical_var, cat_var):
     sns.set()
 
@@ -34,4 +32,3 @@ def num_per_cat(data, numerical_var, cat_var):
     plt.show()
 
 #a
->>>>>>> Stashed changes
