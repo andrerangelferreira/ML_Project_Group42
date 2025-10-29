@@ -5,6 +5,7 @@ import seaborn as sns
 import re
 from rapidfuzz import process, fuzz
 import math
+from sklearn.model_selection import train_test_split
 
 
 def normalize_text(x):
