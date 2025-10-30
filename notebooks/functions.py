@@ -31,3 +31,25 @@ def num_per_cat(data, numerical_var, cat_var):
     plt.xticks()
     plt.tight_layout()
     plt.show()
+
+
+def boxplotter(data, metric_features):
+
+    # Plot ALL Numeric Variables' Histograms in one figure
+
+    sns.set(style= "darkgrid", context= "notebook") ## Reset to darkgrid
+
+    metric_features = data.select_dtypes(include=np.number)
+
+    # Prepare figure. Create individual axes where each histogram will be placed
+    fig, axes = plt.subplots(2, 4, figsize=(15, 10),tight_layout=True)
+
+    # Plot data
+    # Iterate across axes objects and associate each histogram (hint: use the ax.hist() instead of plt.hist()):
+    for ax, feat in zip(axes.flatten(), metric_features): # Notice the zip() function and flatten() method
+        sns.boxplot(x=data[feat], ax=ax)
+        
+    # Layout
+    # Add a centered title to the figure:
+    plt.suptitle("Numeric Variables' Box Plots", fontsize=20, y=1.02, fontweight='bold')
+    plt.show()
