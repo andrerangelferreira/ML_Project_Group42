@@ -6,7 +6,7 @@ import re
 from rapidfuzz import process, fuzz
 import math
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, LabelEncoder
 from sklearn.cluster import DBSCAN
 from sklearn.impute import KNNImputer
 
@@ -36,7 +36,7 @@ def num_per_cat(data, numerical_var, cat_var):
     plt.show()
 
 
-def boxplotter(data, metric_features):
+def boxplotter(data, metric_features, n_rows, n_cols):
 
     # Plot ALL Numeric Variables' Histograms in one figure
 
@@ -45,7 +45,7 @@ def boxplotter(data, metric_features):
     metric_features = data.select_dtypes(include=np.number)
 
     # Prepare figure. Create individual axes where each histogram will be placed
-    fig, axes = plt.subplots(2, 4, figsize=(15, 10),tight_layout=True)
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 10),tight_layout=True)
 
     # Plot data
     # Iterate across axes objects and associate each histogram (hint: use the ax.hist() instead of plt.hist()):
@@ -57,3 +57,5 @@ def boxplotter(data, metric_features):
     plt.suptitle("Numeric Variables' Box Plots", fontsize=20, y=1.02, fontweight='bold')
     plt.show()
 
+def custom_combiner(feature, category):
+    return f"{category}"
