@@ -8,6 +8,7 @@ import math
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import DBSCAN
+from sklearn.impute import KNNImputer
 
 
 def normalize_text(x):
@@ -55,3 +56,4 @@ def boxplotter(data, metric_features):
     # Add a centered title to the figure:
     plt.suptitle("Numeric Variables' Box Plots", fontsize=20, y=1.02, fontweight='bold')
     plt.show()
+
