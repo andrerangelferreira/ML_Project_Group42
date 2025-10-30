@@ -6,7 +6,7 @@ import re
 from rapidfuzz import process, fuzz
 import math
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, OneHotEncoder, LabelEncoder
+from sklearn.preprocessing import StandardScaler, RobustScaler, OneHotEncoder, LabelEncoder
 from sklearn.cluster import DBSCAN
 from sklearn.impute import KNNImputer
 
@@ -41,8 +41,6 @@ def boxplotter(data, metric_features, n_rows, n_cols):
     # Plot ALL Numeric Variables' Histograms in one figure
 
     sns.set(style= "darkgrid", context= "notebook") ## Reset to darkgrid
-
-    metric_features = data.select_dtypes(include=np.number)
 
     # Prepare figure. Create individual axes where each histogram will be placed
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 10),tight_layout=True)
