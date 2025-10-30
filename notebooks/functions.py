@@ -6,6 +6,8 @@ import re
 from rapidfuzz import process, fuzz
 import math
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import DBSCAN
 
 
 def normalize_text(x):
