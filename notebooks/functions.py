@@ -1,14 +1,37 @@
+# ------ Standard Library Imports ------
+import math
+import re
+# ------ Data Manipulation ------
 import pandas as pd
 import numpy as np
-import matplotlib.pylab as plt
+
+# ------ Visualization ------
+import matplotlib.pyplot as plt   # use pyplot instead of pylab
 import seaborn as sns
-import re
-from rapidfuzz import process, fuzz
-import math
+
+# ------ Machine Learning - Preprocessing ------
+from sklearn.preprocessing import (
+    StandardScaler, 
+    RobustScaler, 
+    OneHotEncoder, 
+    LabelEncoder
+)
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, RobustScaler, OneHotEncoder, LabelEncoder
+from sklearn.feature_selection import RFE
+from sklearn.linear_model import LinearRegression
+
+# ------ Machine Learning - Algorithms ------
 from sklearn.cluster import DBSCAN
+
+# ------ Missing Data Imputation ------
 from sklearn.impute import KNNImputer
+
+# ------ Statistics & Tests ------
+import scipy.stats as stats
+from scipy.stats import chi2_contingency
+
+# ------ String Matching / Fuzzy Matching ------
+from rapidfuzz import process, fuzz
 
 
 def normalize_text(x):
@@ -57,3 +80,37 @@ def boxplotter(data, metric_features, n_rows, n_cols):
 
 def custom_combiner(feature, category):
     return f"{category}"
+
+def correlation_matrix(data, threshold):
+    
+    corr = data.corr(method="pearson")
+    corr = corr.round(2)
+
+    mask_annot = np.absolute(corr.values) >= threshold
+
+    annot = np.where(mask_annot, corr.values, np.full(corr.shape,"")) 
+
+    fig = plt.figure(figsize=(10, 8))
+
+    # Plotting the heatmap of the correlation matrix
+    sns.heatmap(data=corr, 
+                annot=annot, # Specifing custom annotation
+                fmt='s', # The annotation matrix now has strings, so we need to explicitly say this
+                vmin=-1, vmax=1, 
+                center=0,
+                square=True, # Make each cell square-shaped
+                linewidths=.5, # Adding lines between cells
+                cmap='PiYG' # Diverging color map
+                )
+
+    plt.show()
+
+def TestIndependence(X,y,var,alpha=0.05):        
+    dfObserved = pd.crosstab(y,X) 
+    chi2, p, dof, expected = stats.chi2_contingency(dfObserved.values)
+    dfExpected = pd.DataFrame(expected, columns=dfObserved.columns, index = dfObserved.index)
+    if p<alpha:
+        result="{0} is IMPORTANT for Prediction".format(var)
+    else:
+        result="{0} is NOT an important predictor. (Discard {0} from model)".format(var)
+    print(result)
