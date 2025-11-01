@@ -8,6 +8,8 @@ import math
 from sklearn.model_selection import train_test_split
 from sklearn.impute import KNNImputer
 from sklearn.preprocessing import StandardScaler
+import joblib
+
 
 
 def normalize_text(x):
