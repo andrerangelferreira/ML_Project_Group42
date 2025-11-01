@@ -18,7 +18,7 @@ from sklearn.preprocessing import (
 )
 from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import RFE
-from sklearn.linear_model import LinearRegression, LassoCV
+from sklearn.linear_model import LinearRegression, LassoCV, Ridge
 
 # ------ Machine Learning - Algorithms ------
 from sklearn.cluster import DBSCAN
@@ -114,3 +114,10 @@ def TestIndependence(X,y,var,alpha=0.05):
     else:
         result="{0} is NOT an important predictor. (Discard {0} from model)".format(var)
     print(result)
+
+def plot_importance(coef,name):
+    imp_coef = coef.sort_values()
+    plt.figure(figsize=(8,10))
+    imp_coef.plot(kind = "barh")
+    plt.title("Feature importance using " + name + " Model")
+    plt.show()
