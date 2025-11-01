@@ -7,8 +7,12 @@ from rapidfuzz import process, fuzz
 import math
 from sklearn.model_selection import train_test_split
 from sklearn.impute import KNNImputer
-from sklearn.preprocessing import StandardScaler
-import joblib
+from sklearn.preprocessing import (
+    StandardScaler, 
+    RobustScaler, 
+    OneHotEncoder, 
+    LabelEncoder
+)
 
 
 
@@ -35,3 +39,7 @@ def num_per_cat(data, numerical_var, cat_var):
     plt.xticks()
     plt.tight_layout()
     plt.show()
+
+
+def custom_combiner(feature, category):
+    return f"{category}"
