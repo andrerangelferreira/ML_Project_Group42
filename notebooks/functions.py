@@ -17,11 +17,19 @@ from sklearn.preprocessing import (
     LabelEncoder
 )
 from sklearn.model_selection import train_test_split
-from sklearn.feature_selection import RFE
-from sklearn.linear_model import LinearRegression, LassoCV, Ridge, ElasticNet
+
+# ------ Evaluation metrics ------
+from sklearn.metrics import (
+    r2_score,
+    mean_absolute_error,
+    root_mean_squared_error,
+)
 
 # ------ Machine Learning - Algorithms ------
 from sklearn.cluster import DBSCAN
+from sklearn.feature_selection import RFE
+from sklearn.linear_model import LinearRegression, LassoCV, Ridge, ElasticNet
+from sklearn.ensemble import RandomForestRegressor
 
 # ------ Missing Data Imputation ------
 from sklearn.impute import KNNImputer
@@ -121,3 +129,28 @@ def plot_importance(coef,name):
     imp_coef.plot(kind = "barh")
     plt.title("Feature importance using " + name + " Model")
     plt.show()
+
+def calculate_regression_metrics(y_true, y_pred):
+
+    r2 = round(r2_score(y_true, y_pred), 4)
+    mae = round(mean_absolute_error(y_true, y_pred), 2)
+    rmse = round(root_mean_squared_error(y_true, y_pred), 2)
+    
+    print("Evaluation Metrics")
+    print("------------------")
+    print(f"R² Score : {r2}")
+    print(f"MAE      : {mae}")
+    print(f"RMSE     : {rmse}")
+    print("------------------")
+    
+    return r2, mae, rmse
+
+def test_params(model, params, X_train, X_val, y_train, y_val):
+    model = model(**params, random_state=42, n_jobs=-1)
+    model.fit(X_train, y_train)
+
+    train_score = model.score(X_train, y_train)
+    print(f"Train R2 score: {train_score:.4f}\n")
+
+    preds = model.predict(X_val)
+    return print(f"{calculate_regression_metrics(y_val, preds)}\n\n")
