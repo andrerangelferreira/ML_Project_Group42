@@ -16,7 +16,7 @@ from sklearn.preprocessing import (
     OneHotEncoder, 
     LabelEncoder
 )
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, RandomizedSearchCV
 
 # ------ Evaluation metrics ------
 from sklearn.metrics import (
