@@ -131,26 +131,33 @@ def plot_importance(coef,name):
     plt.show()
 
 def calculate_regression_metrics(y_true, y_pred):
-
-    r2 = round(r2_score(y_true, y_pred), 4)
-    mae = round(mean_absolute_error(y_true, y_pred), 2)
-    rmse = round(root_mean_squared_error(y_true, y_pred), 2)
     
-    print("Evaluation Metrics")
-    print("------------------")
-    print(f"R² Score : {r2}")
-    print(f"MAE      : {mae}")
-    print(f"RMSE     : {rmse}")
-    print("------------------")
-    
+    r2   = r2_score(y_true, y_pred)
+    mae  = mean_absolute_error(y_true, y_pred)
+    rmse = root_mean_squared_error(y_true, y_pred)
     return r2, mae, rmse
 
+
 def test_params(model, params, X_train, X_val, y_train, y_val):
-    model = model(**params, random_state=42, n_jobs=-1)
+    model = model(**params)
     model.fit(X_train, y_train)
 
-    train_score = model.score(X_train, y_train)
-    print(f"Train R2 score: {train_score:.4f}\n")
+    # ---- Train Metrics ----
+    train_preds = model.predict(X_train)
+    train_r2, train_mae, train_rmse = calculate_regression_metrics(y_train, train_preds)
 
-    preds = model.predict(X_val)
-    return print(f"{calculate_regression_metrics(y_val, preds)}\n\n")
+    print("=== Train Metrics ===")
+    print(f"R² Score : {train_r2:.4f}")
+    print(f"MAE      : {train_mae:.2f}")
+    print(f"RMSE     : {train_rmse:.2f}\n")
+
+    # ---- Validation Metrics ----
+    val_preds = model.predict(X_val)
+    val_r2, val_mae, val_rmse = calculate_regression_metrics(y_val, val_preds)
+
+    print("=== Validation Metrics ===")
+    print(f"R² Score : {val_r2:.4f}")
+    print(f"MAE      : {val_mae:.2f}")
+    print(f"RMSE     : {val_rmse:.2f}")
+
+
