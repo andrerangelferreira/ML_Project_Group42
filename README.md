@@ -38,3 +38,14 @@ Nova IMS | MSc in Data Science | 2025/2026
 
 ## Requirements
 The project was developed in **Python 3.11** using the following key libraries:
+
+---
+
+Meeting : 13 Nov
+-> revisao da entrega
+-> proximos passos
+-> analisar pipeline implementada 
+
+Homework rever pipeline
+Next Metting:
+Domingo 16 November (primeira imp pipeline)
