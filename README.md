@@ -41,11 +41,19 @@ The project was developed in **Python 3.11** using the following key libraries:
 
 ---
 
-Meeting : 13 Nov
--> revisao da entrega
--> proximos passos
--> analisar pipeline implementada 
+## Meetings
 
-Homework rever pipeline
-Next Metting:
-Domingo 16 November (primeira imp pipeline)
+### Meeting — 13 Nov
+**Agenda:**
+- Review of the submission  
+- Next steps  
+- Analysis of the implemented pipeline  
+
+**Homework:**
+- Review the pipeline
+
+### Next Meeting
+- **16 November (Sunday)**
+  - First pipeline implementation
+
+---
