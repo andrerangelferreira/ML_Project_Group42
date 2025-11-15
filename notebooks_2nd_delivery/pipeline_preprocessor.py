@@ -1,9 +1,9 @@
 import pandas as pd
 import numpy as np
 
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, TransformerMixin
 
-class Preprocessor_Pipeline(BaseEstimator):
+class Preprocessor_Pipeline(BaseEstimator, TransformerMixin):
     
     def __init__(self, 
                  outlier_method = "IQR",
@@ -19,50 +19,41 @@ class Preprocessor_Pipeline(BaseEstimator):
 
     def fit(self, X_train, **kwargs):
 
-        #Removing outliers
-        X_train = self.outliers_removal(X_train, **kwargs)
 
-        #Imputing Missing Values
-        X_train = self.missing_values_imputation(X_train, **kwargs)
-
-        #Encoding the categorical columns
-        X_train = self.encoding(X_train, **kwargs)
-
-        #Scaling 
-        X_train = self.scaling(X_train, **kwargs)
-
-        return X_train
-    
-    def outliers_removal(self, X_train, X_val):
+        # ------- OUTLIERS ------- #
 
         # Interquartil Range Method
         if self.outlier_method == "IQR":
-                
-            #Probably we'll have to do the capping of outliers in train and validation data all inside thsi function
-            # and follow the same reasoning for Missing values, encoding and scaling
+
+            self.q1_ = X_train.quantile(0.25)
+            self.q3_ = X_train.quantile(0.75)
+            self.iqr_ = self.q3_ - self.q1_
+
+        elif self.outlier_method == "Z-score":
+            uhi
+
+        return X_train
+    
+    def transform(self, X, **kwargs):
+
+        X = X.copy()
+            
+        if self.outlier_method == "IQR":
 
             #Capping moderate outliers
-                if len(self.mod_outliers_cols) > 0:
-                    for col in self.mod_outliers_cols:
+            if len(self.mod_outliers_cols) > 0:
+                for col in self.mod_outliers_cols:
 
-                        self.__dict__q1 = {}
-                        self.__dict__q3 = {}
+                    X[col] = np.clip(X[col], self.q1_[col] - 1.5 * self.iqr_[col] , self.q3_[col] + 1.5 * self.iqr_[col])
 
-                        self.__dict__q1[col] = X_train[col].quantile(0.25)
-                        self.__dict__q3[col] = X_train[col].quantile(0.75)
-                        IQR = self.__dict__q3[col] - self.__dict__q1[col]
-                        X_train[col] = np.clip(X_train[col], self.__dict__q1[col] - 1.5 * IQR , self.__dict__q3[col] + 1.5 * IQR)
-                        #X_val[col] = np.clip(X_val[col], q_1 - 1.5 * IQR , q_3 + 1.5 * IQR)
+            #Capping severate outliers        
+            if len(self.sev_outliers_cols) > 0:    
+                for col in self.sev_outliers_cols:
 
-                #Capping severate outliers        
-                if len(self.sev_outliers_cols) > 0:    
-                    for col in self.sev_outliers_cols:
+                    X[col] = np.clip(X[col], self.q1_[col] - 3 * self.iqr_[col] , self.q3_[col] + 3 * self.iqr_[col])
 
-                        self.__dict__q1[col] = X_train[col].quantile(0.25)
-                        self.__dict__q3[col] = X_train[col].quantile(0.75)
-                        IQR = self.__dict__q3[col] - self.__dict__q1[col]
-                        X_train[col] = np.clip(X_train[col], self.__dict__q1[col] - 3 * IQR , self.__dict__q3[col] + 3 * IQR)
 
+    
         
 
 
