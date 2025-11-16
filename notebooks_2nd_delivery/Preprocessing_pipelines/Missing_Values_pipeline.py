@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.impute import SimpleImputer, KNNImputer
 from sklearn.impute import IterativeImputer
+from sklearn.preprocessing import StandardScaler
 
 
 class MissingValuesDealer(BaseEstimator, TransformerMixin):
@@ -45,16 +46,33 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
             )
             self.imputer.fit(X_train)
 
+        elif self.imputation_method == "knn_brandwise":
+
+            self.metric_features_ = X_train.select_dtypes(include=np.number)
+
+            self.scalers_ = {}   # scaler per brand
+            self.imputers_ = {}  # knn imputer per brand
+
+            for brand, df_brand in X_train.groupby("Brand"):
+
+                scaler = StandardScaler()
+                imputer = KNNImputer(n_neighbors=self.knn_neighbors)
+
+                # Fit scaler
+                scaled = scaler.fit_transform(df_brand[self.metric_features])
+
+                # Fit imputer on scaled data
+                imputer.fit(scaled)
+
+                # Store both
+                self.scalers_[brand] = scaler
+                self.imputers_[brand] = imputer
+
         elif self.imputation_method == "iterative":
             self.imputer = IterativeImputer(
                 random_state=self.random_state
             )
             self.imputer.fit(X_train)
-
-        elif self.imputation_method == "drop":
-            # no fitting needed
-            pass
-
         return self
 
 
@@ -66,6 +84,31 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
         if self.imputation_method in ["simple", "knn", "iterative"]:
             X_imputed = self.imputer.transform(X)
             X_imputed = pd.DataFrame(X_imputed, columns=X.columns, index=X.index)
+            return X_imputed, y
+        
+        # --- BRAND-WISE KNN IMPUTATION ---
+        elif self.imputation_method == "knn_brandwise":
+
+            imputed_list = []
+
+            for brand, df_brand in X.groupby("Brand"):
+
+                df_temp = df_brand.copy()
+
+                scaler = self.scalers_[brand]
+                imputer = self.imputers_[brand]
+
+                # Scale, impute, inverse scale
+                scaled = scaler.transform(df_temp[self.metric_features_])
+                imputed_scaled = imputer.transform(scaled)
+                df_temp[self.metric_features_] = scaler.inverse_transform(imputed_scaled)
+
+                imputed_list.append(df_temp)
+
+            # Reassemble dataset in original order
+            X_imputed = pd.concat(imputed_list, axis=0)
+            X_imputed = X_imputed.loc[X.index]
+
             return X_imputed, y
 
         else:
