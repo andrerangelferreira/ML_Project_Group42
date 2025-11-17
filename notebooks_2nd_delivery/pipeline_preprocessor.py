@@ -30,6 +30,10 @@ class Preprocessor_Pipeline(BaseEstimator, TransformerMixin):
         #Calculating the metrics for missing values imputing
         X_train = self.imputer.fit(X_train, **kwargs)
 
+        X_train = self.encoder.fit(X_train, **kwargs)
+
+        X_train = self.scaler.fit(X_train, **kwargs)
+
     
     def transform(self, X, **kwargs):
 
@@ -38,6 +42,11 @@ class Preprocessor_Pipeline(BaseEstimator, TransformerMixin):
 
         #Imputing Missing values
         X = self.imputer.transform(X, **kwargs) 
+
+        X = self.encoder.transform(X, **kwargs)
+
+        X = self.scaler.transform(X, **kwargs)
+
 
         
 
