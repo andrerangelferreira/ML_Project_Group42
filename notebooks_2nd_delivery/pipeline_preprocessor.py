@@ -5,7 +5,8 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 from Preprocessing_pipelines.Outliers_pipeline import OutliersDealer
 from Preprocessing_pipelines.Missing_Values_pipeline import MissingValuesDealer
-
+from Preprocessing_pipelines.Encoding_pipeline import EncodingDealer
+from Preprocessing_pipelines.Scaling_pipeline import ScalingDealer
 
 
 class Preprocessor_Pipeline(BaseEstimator, TransformerMixin):
@@ -13,14 +14,14 @@ class Preprocessor_Pipeline(BaseEstimator, TransformerMixin):
     def __init__(self, 
                  outlier_removal= OutliersDealer(),
                  imputer= MissingValuesDealer(),
-                 #encoder= Encoder(),
-                 #scaler= StandardScalerCustom()
+                 encoder= EncodingDealer(),
+                 scaler= ScalingDealer()
                 ):
         
         self.outlier_removal = outlier_removal 
         self.imputer = imputer
-        #self.encoder = encoder
-        #self.scaler = scaler
+        self.encoder = encoder
+        self.scaler = scaler
 
     def fit(self, X_train, **kwargs):
        

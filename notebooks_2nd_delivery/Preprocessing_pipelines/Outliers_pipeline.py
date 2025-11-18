@@ -88,7 +88,7 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
 
         return self
     
-    def transform(self, X, **kwargs):
+    def transform(self, X, y, **kwargs):
 
 
         X = X.copy()
@@ -117,23 +117,16 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
         
         elif self.outlier_method == "z-score":
 
-            z = (X - self.means_) / self.stds_
-            mask = (np.abs(z) < self.threshold).all(axis=1)
-            return X[mask], y[mask]
-        
-            #z_mask = np.ones(len(X), dtype=bool)
+            for col in self.z_columns:
 
-            #for col in self.z_columns:
-            #    z_scores = (X[col] - self.means_[col]) / self.stds_[col]
-            #    z_mask &= (np.abs(z_scores) < self.threshold)
-
-            # Filter rows based on outlier mask
-            #return X[z_mask].reset_index(drop=True)
-
-            # NEED TO LOOK AT THE ABOVE COMMENTED CODE AND SEE IF MAKES SENSE AND SHOULD IMPLEMENT IT
+                X[col] = np.clip(X[col],
+                                self.means_[col] - self.threshold * self.stds_[col],
+                                self.means_[col] + self.threshold * self.stds_[col]
+                            )
+            return X
         
         elif self.outlier_method in ["Isolation_Forest", "LOF"]:
             preds = self.model.predict(X[self.model_columns])  # +1 = normal, -1 = outlier
-            mask = preds == 1
+            mask = preds == 1 #Storing the indexes from rows that are considered non outliers
             
             return X[mask], y[mask]
