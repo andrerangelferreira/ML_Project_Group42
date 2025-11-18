@@ -8,52 +8,43 @@ from sklearn.preprocessing import StandardScaler
 class Preprocessor_Pipeline(BaseEstimator, TransformerMixin):
     
     def __init__(self, 
-                 outlier_method = "IQR",
-                 mod_outliers_cols = [],
-                 sev_outliers_cols = [],
-
-                 
-                 ):
+                 outlier_removal= OutliersDealer(),
+                 imputer= MissingValuesDealer(),
+                 encoder= EncodingDealer(),
+                 scaler= ScalingDealer()
+                ):
         
-        self.outlier_method = outlier_method 
-        self.mod_outliers_cols = mod_outliers_cols
-        self.sev_outliers_cols = sev_outliers_cols
+        self.outlier_removal = outlier_removal 
+        self.imputer = imputer
+        self.encoder = encoder
+        self.scaler = scaler
 
     def fit(self, X_train, **kwargs):
+       
+        #Calculating the outlier methods
+        X_train = self.outlier_removal.fit(X_train, **kwargs)
 
+        #Calculating the metrics for missing values imputing
+        X_train = self.imputer.fit(X_train, **kwargs)
 
-        # ------- OUTLIERS ------- #
+        X_train = self.encoder.fit(X_train, **kwargs)
 
-        # Interquartil Range Method
-        if self.outlier_method == "IQR":
+        X_train = self.scaler.fit(X_train, **kwargs)
 
-            self.q1_ = X_train.quantile(0.25)
-            self.q3_ = X_train.quantile(0.75)
-            self.iqr_ = self.q3_ - self.q1_
-
-        elif self.outlier_method == "Z-score":
-            uhi
-
-        return X_train
     
-
     def transform(self, X, **kwargs):
 
-        X = X.copy()
-            
-        if self.outlier_method == "IQR":
+        #Treating the outliers
+        X = self.outlier_removal.transform(X, **kwargs) 
 
-            #Capping moderate outliers
-            if len(self.mod_outliers_cols) > 0:
-                for col in self.mod_outliers_cols:
+        #Imputing Missing values
+        X = self.imputer.transform(X, **kwargs) 
 
-                    X[col] = np.clip(X[col], self.q1_[col] - 1.5 * self.iqr_[col] , self.q3_[col] + 1.5 * self.iqr_[col])
+        X = self.encoder.transform(X, **kwargs)
 
-            #Capping severate outliers        
-            if len(self.sev_outliers_cols) > 0:    
-                for col in self.sev_outliers_cols:
+        X = self.scaler.transform(X, **kwargs)
 
-                    X[col] = np.clip(X[col], self.q1_[col] - 3 * self.iqr_[col] , self.q3_[col] + 3 * self.iqr_[col])
+
 
 
 class missing_categorical(BaseEstimator, TransformerMixin):
