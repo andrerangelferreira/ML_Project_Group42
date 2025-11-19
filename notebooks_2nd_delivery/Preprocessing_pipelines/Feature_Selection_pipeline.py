@@ -8,22 +8,19 @@ from sklearn.feature_selection import (
     f_regression,
     RFE
 )
+from sklearn.inspection import permutation_importance
 
-# Linear Models
 from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
 
-# Tree-Based Models
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor, GradientBoostingRegressor, AdaBoostRegressor
 from sklearn.ensemble import HistGradientBoostingRegressor
 
-# SVM
 from sklearn.svm import SVR
 
-# KNN
 from sklearn.neighbors import KNeighborsRegressor
 
-
+from sklearn.neural_network import MLPClassifier
 
 class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
 
@@ -35,6 +32,9 @@ class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
         model_name= "rf",               # model acronym
         n_features_to_select=None,      # for RFE
         random_state=42,
+        n_repeats=10,
+        top_k=None,
+        threshold_mlp = None,
         **kwargs
     ):
         
@@ -54,10 +54,15 @@ class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
         # RFE parameters
         self.n_features_to_select = n_features_to_select
 
+        # MLP paramenters
+        self.n_repeats = n_repeats
+        self.top_k = top_k
+        self.threshold_mlp = threshold_mlp
+
 
     def get_model(self):
 
-        # ---- LINEAR MODELS ----
+        #Linear Models
         if self.model_name == "linear":
             return LinearRegression()
 
@@ -71,7 +76,7 @@ class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
             return ElasticNet()
 
 
-        # ---- TREE-BASED MODELS ----
+        #Decision Trees
         elif self.model_name == "rf":   # Random Forest
             return RandomForestRegressor(random_state=self.random_state)
 
@@ -81,8 +86,8 @@ class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
         elif self.model_name == "dt":   # Decision Tree
             return DecisionTreeRegressor(random_state=self.random_state)
 
+        #Gradient Boosting models
 
-        # ---- GRADIENT BOOSTING ----
         elif self.model_name == "gboost":
             return GradientBoostingRegressor(random_state=self.random_state)
 
@@ -92,18 +97,19 @@ class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
         elif self.model_name == "hgb":
             return HistGradientBoostingRegressor(random_state=self.random_state)
 
-
-        # ---- SUPPORT VECTOR MACHINE ----
+        #Suport Vector Machine regression model
         elif self.model_name == "svm":
             return SVR()
 
+        #K-Nearest Neighbours model
 
-        # ---- K-NEAREST NEIGHBORS ----
         elif self.model_name == "knn":
             return KNeighborsRegressor()
+        
+        #Multi-Layer Percepton model
+        elif self.model_name == "mlp":
+            return MLPClassifier(random_state=self.random_state)
 
-
-        # ---- ERROR ----
         else:
             raise ValueError(f"Unknown regression model '{self.model_name}'")
 
@@ -111,6 +117,7 @@ class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None, **kwargs):
 
         X = X.copy()
+        y = y.copy()
 
         # 1) Variance Threshold
         if self.selection_method == "variance":
@@ -124,8 +131,8 @@ class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
             self.selector.fit(X, y)
 
         # 3) Model-based feature selection
-        elif self.selection_method == "model":
-            model = self.get_model()
+        elif self.selection_method == "model": #This option cannot be applied to MLP, because MLP doesn't /
+            model = self.get_model()           # / have "feature_importances_"
             model.fit(X, y)
             importances = np.abs(model.feature_importances_ 
                                   if hasattr(model, "feature_importances_") 
@@ -140,13 +147,47 @@ class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
             self.support_mask_ = mask
 
         # 4) RFE
-        elif self.selection_method == "rfe":
+        elif self.selection_method == "rfe": #Should't be applied when we have MLP, beacuse is too much time consuming
             model = self.get_model()
             self.selector = RFE(
                 estimator=model,
                 n_features_to_select=self.n_features_to_select
             )
             self.selector.fit(X, y)
+
+        # 5) Permutation importance
+        elif self.selection_method == "permutation": # This method is for MLP
+
+            X = X.copy()
+            y = y.copy()
+
+            # Fit the base model
+            self.model.fit(X, y)
+
+            # Compute permutation importance
+            r = permutation_importance(
+                self.model, X, y,
+                n_repeats=self.n_repeats,
+                random_state=self.random_state
+            )
+
+            self.importances_ = pd.Series(r.importances_mean, index=X.columns)
+
+            # Select features based on criterion
+            if self.top_k is not None:
+                # Keep the top-k most important features
+                self.features_to_keep_ = self.importances_.sort_values(ascending=False).head(self.top_k).index.tolist()
+
+            elif self.threshold is not None:
+                # Keep features above a minimum importance
+                self.features_to_keep_ = self.importances_[self.importances_ > self.threshold].index.tolist()
+
+            else:
+                # Default: keep all features
+                self.features_to_keep_ = X.columns.tolist()
+
+            return self
+
 
         else:
             raise ValueError(f"Unknown method: {self.selection_method}")
@@ -169,6 +210,11 @@ class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
             cols = np.array(X.columns)[self.support_mask_]
             X_sel = X.loc[:, cols]
             return X_sel, y
+        
+        elif self.selection_method == "permutation": # MLP method
+            X = X.copy()
+            # Reduce to selected features
+            return X[self.features_to_keep_]
 
         else:
             raise ValueError(f"Unknown method: {self.selection_method}")
