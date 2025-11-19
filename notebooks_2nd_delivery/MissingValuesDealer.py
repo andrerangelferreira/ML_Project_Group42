@@ -56,7 +56,13 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
 
 
         elif self.imputation_method == "knn":
+            self.metric_features = X_train.select_dtypes(include=np.number).columns
   
+            #scaler for knn
+            scaler = StandardScaler()
+            # Fit scaler
+            scaled = scaler.fit_transform(X_train[self.metric_features])
+
             #imputer for numerical
             self.imputer_num = KNNImputer(
                 n_neighbors=self.knn_neighbors
