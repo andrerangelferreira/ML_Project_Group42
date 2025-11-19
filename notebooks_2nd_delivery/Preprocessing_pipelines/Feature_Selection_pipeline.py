@@ -5,28 +5,39 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.feature_selection import (
     VarianceThreshold,
     SelectKBest,
-    f_classif,
     f_regression,
     RFE
 )
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.linear_model import LogisticRegression, LinearRegression
+
+# Linear Models
+from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
+
+# Tree-Based Models
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor, GradientBoostingRegressor, AdaBoostRegressor
+from sklearn.ensemble import HistGradientBoostingRegressor
+
+# SVM
+from sklearn.svm import SVR
+
+# KNN
+from sklearn.neighbors import KNeighborsRegressor
+
 
 
 class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
 
     def __init__(
         self,
-        selection_method="variance",   # "variance", "kbest", "model", "rfe"
+        selection_method="variance",   # Method options: "variance", "kbest", "model", "rfe"
         threshold=0.0,                  # for variance threshold
-        k=10,                           # for SelectKBest
-        score_func="f_classif",         # or "f_regression"
-        model_type="classifier",        # "classifier" or "regressor"
-        model_name="rf",                # "rf" or "linear"
+        k=10,                           # for SelectKBest    
+        model_name= "rf",               # model acronym
         n_features_to_select=None,      # for RFE
         random_state=42,
         **kwargs
     ):
+        
         self.selection_method = selection_method
 
         # Variance threshold parameters
@@ -34,10 +45,9 @@ class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
 
         # SelectKBest parameters
         self.k = k
-        self.score_func = score_func
 
         # Model-based selection parameters
-        self.model_type = model_type
+    
         self.model_name = model_name
         self.random_state = random_state
 
@@ -45,28 +55,57 @@ class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
         self.n_features_to_select = n_features_to_select
 
 
-    def _get_score_func(self):
-        if self.score_func == "f_classif":
-            return f_classif
-        elif self.score_func == "f_regression":
-            return f_regression
+    def get_model(self):
+
+        # ---- LINEAR MODELS ----
+        if self.model_name == "linear":
+            return LinearRegression()
+
+        elif self.model_name == "ridge":
+            return Ridge()
+
+        elif self.model_name == "lasso":
+            return Lasso()
+
+        elif self.model_name == "elasticnet":
+            return ElasticNet()
+
+
+        # ---- TREE-BASED MODELS ----
+        elif self.model_name == "rf":   # Random Forest
+            return RandomForestRegressor(random_state=self.random_state)
+
+        elif self.model_name == "et":   # Extra Trees
+            return ExtraTreesRegressor(random_state=self.random_state)
+
+        elif self.model_name == "dt":   # Decision Tree
+            return DecisionTreeRegressor(random_state=self.random_state)
+
+
+        # ---- GRADIENT BOOSTING ----
+        elif self.model_name == "gboost":
+            return GradientBoostingRegressor(random_state=self.random_state)
+
+        elif self.model_name == "adaboost":
+            return AdaBoostRegressor(random_state=self.random_state)
+
+        elif self.model_name == "hgb":
+            return HistGradientBoostingRegressor(random_state=self.random_state)
+
+
+        # ---- SUPPORT VECTOR MACHINE ----
+        elif self.model_name == "svm":
+            return SVR()
+
+
+        # ---- K-NEAREST NEIGHBORS ----
+        elif self.model_name == "knn":
+            return KNeighborsRegressor()
+
+
+        # ---- ERROR ----
         else:
-            raise ValueError(f"Unknown score func: {self.score_func}")
-
-
-    def _get_model(self):
-        if self.model_type == "classifier":
-            if self.model_name == "rf":
-                return RandomForestClassifier(random_state=self.random_state)
-            elif self.model_name == "linear":
-                return LogisticRegression(max_iter=500)
-        else:
-            if self.model_name == "rf":
-                return RandomForestRegressor(random_state=self.random_state)
-            elif self.model_name == "linear":
-                return LinearRegression()
-
-        raise ValueError(f"Unknown model: {self.model_name} ({self.model_type})")
+            raise ValueError(f"Unknown regression model '{self.model_name}'")
 
 
     def fit(self, X, y=None, **kwargs):
@@ -80,13 +119,13 @@ class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
 
         # 2) SelectKBest
         elif self.selection_method == "kbest":
-            score_func = self._get_score_func()
-            self.selector = SelectKBest(score_func=score_func, k=self.k)
+
+            self.selector = SelectKBest(score_func=f_regression, k=self.k)
             self.selector.fit(X, y)
 
         # 3) Model-based feature selection
         elif self.selection_method == "model":
-            model = self._get_model()
+            model = self.get_model()
             model.fit(X, y)
             importances = np.abs(model.feature_importances_ 
                                   if hasattr(model, "feature_importances_") 
@@ -99,11 +138,10 @@ class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
             mask[top_k_idx] = True
 
             self.support_mask_ = mask
-            self.selector = None  # not using scikit-learn selector here
 
         # 4) RFE
         elif self.selection_method == "rfe":
-            model = self._get_model()
+            model = self.get_model()
             self.selector = RFE(
                 estimator=model,
                 n_features_to_select=self.n_features_to_select
