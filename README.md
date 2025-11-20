@@ -57,3 +57,13 @@ The project was developed in **Python 3.11** using the following key libraries:
   - First pipeline implementation
 
 ---
+
+### Meeting — 16 Nov
+**Agenda:**
+- Check pipeline implementation
+- Next steps  
+- Divide Work
+
+### Next Meeting
+- **22 November (Saturday)**
+  - Check pipeline implementations
