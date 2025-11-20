@@ -3,6 +3,7 @@ import numpy as np
 
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.impute import SimpleImputer, KNNImputer
+from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
 from sklearn.preprocessing import StandardScaler
 
@@ -31,7 +32,7 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
         self.random_state = random_state
 
 
-    def fit(self, X_train, **kwargs):
+    def fit(self, X_train, y = None, **kwargs):
 
         if self.imputation_method == "simple":
             self.imputer = SimpleImputer(
@@ -76,7 +77,7 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
         return self
 
 
-    def transform(self, X, y, **kwargs):
+    def transform(self, X, y = None, **kwargs):
 
         X = X.copy()
 

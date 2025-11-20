@@ -3,10 +3,11 @@ import numpy as np
 
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from Preprocessing_pipelines.Outliers_pipeline import OutliersDealer
-from Preprocessing_pipelines.Missing_Values_pipeline import MissingValuesDealer
-from Preprocessing_pipelines.Encoding_pipeline import EncodingDealer
-from Preprocessing_pipelines.Scaling_pipeline import ScalingDealer
+from Outliers_pipeline import OutliersDealer
+from Missing_Values_pipeline import MissingValuesDealer
+from Encoding_pipeline import EncodingDealer
+from Scaling_pipeline import ScalingDealer
+from Feature_Selection_pipeline import FeatureSelectionDealer
 
 
 class Preprocessor_Pipeline(BaseEstimator, TransformerMixin):
@@ -15,15 +16,17 @@ class Preprocessor_Pipeline(BaseEstimator, TransformerMixin):
                  outlier_removal= OutliersDealer(),
                  imputer= MissingValuesDealer(),
                  encoder= EncodingDealer(),
-                 scaler= ScalingDealer()
+                 scaler= ScalingDealer(), 
+                 selector = FeatureSelectionDealer()
                 ):
         
         self.outlier_removal = outlier_removal 
         self.imputer = imputer
         self.encoder = encoder
         self.scaler = scaler
+        self.selector = selector
 
-    def fit(self, X_train, **kwargs):
+    def fit(self, X_train, y = None, **kwargs):
        
         #Calculating the outlier methods
         X_train = self.outlier_removal.fit(X_train, **kwargs)
@@ -35,11 +38,13 @@ class Preprocessor_Pipeline(BaseEstimator, TransformerMixin):
 
         X_train = self.scaler.fit(X_train, **kwargs)
 
+        X_train = self.selector.fit(X_train, **kwargs)
+
     
-    def transform(self, X, **kwargs):
+    def transform(self, X, y= None, **kwargs):
 
         #Treating the outliers
-        X = self.outlier_removal.transform(X, **kwargs) 
+        X = self.outlier_removal.transform(X, y, **kwargs) 
 
         #Imputing Missing values
         X = self.imputer.transform(X, **kwargs) 
@@ -47,6 +52,8 @@ class Preprocessor_Pipeline(BaseEstimator, TransformerMixin):
         X = self.encoder.transform(X, **kwargs)
 
         X = self.scaler.transform(X, **kwargs)
+
+        X = self.selector.transform(X, **kwargs)
 
 
         

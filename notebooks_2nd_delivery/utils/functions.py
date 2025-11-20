@@ -23,6 +23,7 @@ from sklearn.metrics import (
     r2_score,
     mean_absolute_error,
     root_mean_squared_error,
+    make_scorer
 )
 
 # ------ Machine Learning - Algorithms ------
@@ -40,6 +41,9 @@ from scipy.stats import chi2_contingency
 
 # ------ String Matching / Fuzzy Matching ------
 from rapidfuzz import process, fuzz
+
+# ------ Pipeline ------
+from sklearn.pipeline import Pipeline
 
 
 def normalize_text(x):

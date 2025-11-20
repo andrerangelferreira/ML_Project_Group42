@@ -43,7 +43,7 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
         self.model_columns = model_columns
 
 
-    def fit(self, X_train, **kwargs):
+    def fit(self, X_train, y = None,  **kwargs):
 
         # Interquartil Range Method
         if self.outlier_method == "IQR":
@@ -88,7 +88,7 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
 
         return self
     
-    def transform(self, X, y, **kwargs):
+    def transform(self, X, y = None, **kwargs):
 
 
         X = X.copy()
@@ -129,4 +129,4 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
             preds = self.model.predict(X[self.model_columns])  # +1 = normal, -1 = outlier
             mask = preds == 1 #Storing the indexes from rows that are considered non outliers
             
-            return X[mask], y[mask]
+            return X[mask], y[mask] if y != None else X[mask]

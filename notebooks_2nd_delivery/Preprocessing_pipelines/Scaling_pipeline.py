@@ -12,8 +12,7 @@ class ScalingDealer(BaseEstimator, TransformerMixin):
                  **kwargs
                  ):
 
-        self.scaler_name = scaler_name.lower()
-        self.kwargs = kwargs
+        self.scaler_name = scaler_name
 
     def fit(self, X):
 
@@ -28,7 +27,7 @@ class ScalingDealer(BaseEstimator, TransformerMixin):
                 f"Invalid scaler_name '{self.scaler_name}'. "
             )
 
-        self.scaler_ = scalers[self.scaler_name](**self.kwargs).fit(X)
+        self.scaler_ = scalers[self.scaler_name].fit(X)
         return self
 
     def transform(self, X):
