@@ -115,10 +115,7 @@ class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
 
 
     def fit(self, X, y=None, **kwargs):
-
-        X = X.copy()
-        y = y.copy()
-
+        
         # 1) Variance Threshold
         if self.selection_method == "variance":
             self.selector = VarianceThreshold(threshold=self.threshold)
@@ -186,12 +183,6 @@ class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
                 # Default: keep all features
                 self.features_to_keep_ = X.columns.tolist()
 
-            return self
-
-
-        else:
-            raise ValueError(f"Unknown method: {self.selection_method}")
-
         return self
 
 
@@ -204,17 +195,15 @@ class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
             # Ensure dataframe structure is preserved
             cols = np.array(X.columns)[self.selector.get_support()]
             X_sel = pd.DataFrame(X_sel, columns=cols, index=X.index)
-            return X_sel, y
+
+            return X_sel
 
         elif self.selection_method == "model":
             cols = np.array(X.columns)[self.support_mask_]
             X_sel = X.loc[:, cols]
-            return X_sel, y
+            return X_sel
         
         elif self.selection_method == "permutation": # MLP method
             X = X.copy()
             # Reduce to selected features
             return X[self.features_to_keep_]
-
-        else:
-            raise ValueError(f"Unknown method: {self.selection_method}")

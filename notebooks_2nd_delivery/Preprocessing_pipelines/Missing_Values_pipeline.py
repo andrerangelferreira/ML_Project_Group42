@@ -74,6 +74,7 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
                 random_state=self.random_state
             )
             self.imputer.fit(X_train)
+
         return self
 
 
@@ -85,7 +86,7 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
         if self.imputation_method in ["simple", "knn", "iterative"]:
             X_imputed = self.imputer.transform(X)
             X_imputed = pd.DataFrame(X_imputed, columns=X.columns, index=X.index)
-            return X_imputed, y
+            return X_imputed
         
         # --- BRAND-WISE KNN IMPUTATION ---
         elif self.imputation_method == "knn_brandwise":
@@ -110,7 +111,7 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
             X_imputed = pd.concat(imputed_list, axis=0)
             X_imputed = X_imputed.loc[X.index]
 
-            return X_imputed, y
+            return X_imputed
 
         else:
             raise ValueError(f"Unknown imputation method: {self.imputation_method}")

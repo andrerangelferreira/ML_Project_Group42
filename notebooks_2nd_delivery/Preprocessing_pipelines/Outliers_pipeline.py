@@ -92,7 +92,7 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
 
 
         X = X.copy()
-        y = y.copy()
+        y = y.copy() if y != None else None
             
         if self.outlier_method == "IQR":
 

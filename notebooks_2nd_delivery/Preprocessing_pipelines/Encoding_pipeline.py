@@ -33,7 +33,6 @@ class EncodingDealer(BaseEstimator, TransformerMixin):
         - target means per category (Target Encoding)
         - category frequencies (Frequency Encoding)
         """
-        X = X.copy() # avoid modifying original data
         
         if self.cols is None:
             # automatically detect categorical columns

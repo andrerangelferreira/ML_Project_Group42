@@ -14,7 +14,7 @@ class ScalingDealer(BaseEstimator, TransformerMixin):
 
         self.scaler_name = scaler_name
 
-    def fit(self, X):
+    def fit(self, X, **kwargs):
 
         scalers = {
             "robust": RobustScaler,
@@ -22,16 +22,13 @@ class ScalingDealer(BaseEstimator, TransformerMixin):
             "standard": StandardScaler
         }
 
-        if self.scaler_name not in scalers:
-            raise ValueError(
-                f"Invalid scaler_name '{self.scaler_name}'. "
-            )
-
-        self.scaler_ = scalers[self.scaler_name].fit(X)
+        self.scaler_ = scalers[self.scaler_name]().fit(X)
         return self
 
-    def transform(self, X):
+    def transform(self, X, **kwargs):
         
         X = X.copy()
 
-        return self.scaler_.transform(X)
+        X_scaled = self.scaler_.transform(X)
+        
+        return pd.DataFrame(X_scaled, columns=X.columns, index=X.index)
