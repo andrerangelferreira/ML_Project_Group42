@@ -2,11 +2,10 @@ import numpy as np
 import pandas as pd
 
 from sklearn.base import BaseEstimator, RegressorMixin, clone
-from sklearn.utils.validation import check_is_fitted, check_array
-from sklearn.exceptions import NotFittedError
+from sklearn.utils.validation import check_is_fitted
 
+class NuestraPipeline(RegressorMixin, BaseEstimator):
 
-class HermeticRegressor(RegressorMixin, BaseEstimator):
     """
     Custom regressor that integrates preprocessing, feature extraction,
     optional outlier removal, scaling, and a final regression model.
@@ -35,7 +34,6 @@ class HermeticRegressor(RegressorMixin, BaseEstimator):
     def fit(self, X, y, **kwargs):
         """Fits the complete hermetic regression pipeline."""
 
-
         output = self.preprocessor.fit_transform(X, y, **kwargs)
 
         # Handle preprocessors that return only X or (X, y)
@@ -60,13 +58,7 @@ class HermeticRegressor(RegressorMixin, BaseEstimator):
 
         check_is_fitted(self, "model_")
 
-        output = self.preprocessor.transform(X, **kwargs)
-
-        #If a outlier handler method that drops rows was used, it returns y as well, but here we keep only X
-        if isinstance(output, tuple):
-            X_clean = output[0]
-        else:
-            X_clean = output
+        X_clean = self.preprocessor.transform(X, **kwargs)
 
         y_preds = self.model_.predict(X_clean)
 
