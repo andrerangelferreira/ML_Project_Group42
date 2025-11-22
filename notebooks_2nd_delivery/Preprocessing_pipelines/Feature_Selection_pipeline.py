@@ -110,8 +110,6 @@ class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
         elif self.model_name == "mlp":
             return MLPClassifier(random_state=self.random_state)
 
-        else:
-            raise ValueError(f"Unknown regression model '{self.model_name}'")
 
 
     def fit(self, X, y=None, **kwargs):

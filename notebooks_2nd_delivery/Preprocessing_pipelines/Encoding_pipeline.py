@@ -42,13 +42,13 @@ class EncodingDealer(BaseEstimator, TransformerMixin):
 
         # auto-detect columns except in hybrid
         if self.method in ["onehot", "target", "freq"] and self.cols is None:
-            self.cols = X.select_dtypes(include=['object', 'category']).columns.tolist()
+            self.cols_ = X.select_dtypes(include=['object', 'category']).columns.tolist()
 
         # ------------------------------ ONE-HOT ------------------------------
         if self.method == "onehot":
             self.categories_ = {
                 col: X[col].unique().tolist() 
-                for col in self.cols
+                for col in self.cols_
             }
 
         # ------------------------------ TARGET ------------------------------
@@ -57,14 +57,14 @@ class EncodingDealer(BaseEstimator, TransformerMixin):
                 raise ValueError("Target variable 'y' must be provided for target encoding.")
             self.target_means_ = {
                 col: X.groupby(col)[y.name].mean().to_dict()
-                for col in self.cols
+                for col in self.cols_
             }
 
         # ------------------------------ FREQUENCY ------------------------------
         elif self.method == "freq":
             self.freqs_ = {
                 col: X[col].value_counts(normalize=True).to_dict()
-                for col in self.cols
+                for col in self.cols_
             }
 
         # ------------------------------ HYBRID ------------------------------
@@ -98,10 +98,10 @@ class EncodingDealer(BaseEstimator, TransformerMixin):
 
         # ------------------------------ ONE-HOT ------------------------------
         if self.method == "onehot":
-            for col in self.cols:
+            for col in self.cols_:
                 for category in self.categories_[col]:
                     X[f"{col}_{category}"] = (X[col] == category).astype(int)
-            X = X.drop(columns=self.cols)
+            X = X.drop(columns=self.cols_)
 
         # During fit() self.categories_[col] = list of categories that existed in training
         # For each selected categorical column (self.cols):
@@ -112,7 +112,7 @@ class EncodingDealer(BaseEstimator, TransformerMixin):
 
         # ------------------------------ TARGET ------------------------------
         elif self.method == "target":
-            for col in self.cols:
+            for col in self.cols_:
                 mapping = self.target_means_[col]
                 X[col] = X[col].map(mapping)
                 # handle unseen categories
@@ -121,7 +121,7 @@ class EncodingDealer(BaseEstimator, TransformerMixin):
 
         # ------------------------------ FREQUENCY ------------------------------
         elif self.method == "freq":
-            for col in self.cols:
+            for col in self.cols_:
                 mapping = self.freqs_[col]
                 X[col] = X[col].map(mapping)
                 X[col] = X[col].fillna(0)  # unseen categories -> frequency 0
