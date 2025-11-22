@@ -3,6 +3,7 @@ import numpy as np
 
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.impute import SimpleImputer, KNNImputer
+from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 
@@ -95,13 +96,22 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
 
         elif self.imputation_method == "knn_brandwise":
 
+            X_train_ = X_train.copy()
+
+            # First we have to impute the brand, therefore knn_brandwise will leave missing values in rows where brand is missing
+            self.imputer_brand = SimpleImputer(strategy="most_frequent")
+            self.imputer_brand.fit(X_train_[["Brand"]])
+
+            # Replace missing values before groupby
+            X_train_["Brand"] = self.imputer_brand.transform(X_train_[["Brand"]])
+
             #Imputers and scalers for numerical imputation
             self.metric_features = X_train.select_dtypes(include=np.number).columns
 
             self.scalers_ = {}   # scaler per brand
             self.imputers_ = {}  # knn imputer per brand
 
-            for brand, df_brand in X_train.groupby("Brand"):
+            for brand, df_brand in X_train_.groupby("Brand"):
 
                 if self.knn_scaling_method == "standard":
                     scaler = StandardScaler()
@@ -214,6 +224,9 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
         # ----- BRAND-WISE KNN IMPUTATION -----
         elif self.imputation_method == "knn_brandwise":
 
+            #Impute brand first
+            X["Brand"] = self.imputer_brand.transform(X[["Brand"]])
+
             # Split columns
             num_cols = X.select_dtypes(include=np.number).columns
             cat_cols = X.select_dtypes(exclude=np.number).columns
@@ -241,7 +254,7 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
             X_num_imputed = X_num_imputed.loc[X.index]
 
             #Impute Categorical 
-            X_cat_imputed = self.imputer_cat.transform(X.select_dtypes(exclude=np.number))
+            X_cat_imputed = self.imputer_cat.transform(X[cat_cols])
             df_cat = pd.DataFrame(X_cat_imputed, columns=cat_cols, index=X.index)
 
             # Combine
