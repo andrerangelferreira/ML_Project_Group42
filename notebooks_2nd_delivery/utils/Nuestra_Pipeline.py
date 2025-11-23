@@ -24,41 +24,63 @@ class NuestraPipeline(RegressorMixin, BaseEstimator):
     
     def __init__(
         self, 
-        preprocessor,
+        outlier_remover,
+        imputer,
+        encoder,
+        scaler,
+        selector,
         model, 
         **kwargs
     ):
-        self.preprocessor = preprocessor
+        self.outlier_remover = outlier_remover
+        self.imputer = imputer
+        self.encoder = encoder
+        self.scaler = scaler
+        self.selector = selector
         self.model = model
 
     def fit(self, X, y, **kwargs):
         """Fits the complete hermetic regression pipeline."""
 
-        output = self.preprocessor.fit_transform(X, y, **kwargs)
+        output = self.outlier_remover.fit_transform(X, y, **kwargs)
 
         # Handle preprocessors that return only X or (X, y)
         if isinstance(output, tuple):
-            X_clean, y_clean = output
+            X, y = output
         else:
-            X_clean = output
-            y_clean = y
+            X = output
+            y = y
+
+        X = self.imputer.fit_transform(X, **kwargs)
+
+        X = self.encoder.fit_transform(X, **kwargs)
+
+        X = self.scaler.fit_transform(X, **kwargs)
+
+        X_clean = self.selector.fit_transform(X, **kwargs)
 
         # Clone for sklearn compatibility
         self.model_ = clone(self.model)
-        self.model_.fit(X_clean, y_clean)
+        self.model_.fit(X_clean, y)
 
         # Store for inspection
         self.X_ = X_clean
-        self.y_ = y_clean
+        self.y_ = y
 
         return self
 
     def predict(self, X, **kwargs):
         """Predicts regression output given raw input data."""
 
-        check_is_fitted(self, "model_")
+        X = self.imputer.transform(X, **kwargs)
 
-        X_clean = self.preprocessor.transform(X, **kwargs)
+        X = self.encoder.transform(X, **kwargs)
+
+        X = self.scaler.transform(X, **kwargs)
+
+        X_clean = self.selector.transform(X, **kwargs)
+
+        check_is_fitted(self, "model_")
 
         y_preds = self.model_.predict(X_clean)
 

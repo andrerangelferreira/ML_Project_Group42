@@ -1,152 +1,136 @@
 import pandas as pd
 import numpy as np
+
+from sklearn.preprocessing import OneHotEncoder
+
 from sklearn.base import BaseEstimator, TransformerMixin
 
-# custom transformer of categorical encoding from sklearn
-# make the class compatible with sklearn: BaseEstimator, TransformerMixin
 class EncodingDealer(BaseEstimator, TransformerMixin):
-    
     def __init__(
         self,
-        method="onehot",         # methods: "onehot", "target", "freq", "hybrid"
-        cols=None,               # list of columns to encode
-        handle_unknown="ignore", # how to handle unknown categories
-        min_freq=0,              # for rare category handling
-        **kwargs                # additional parameters    
+        method="onehot",         # "onehot", "target", "freq", "hybrid"
+        cols=None,
+        handle_unknown="ignore",
+        min_freq=0,
+        **kwargs
     ):
-        
         self.method = method
         self.cols = cols
         self.handle_unknown = handle_unknown
         self.min_freq = min_freq
-        
-        # attributes created during fit
-        self.categories_ = None
-        self.target_means_ = None
-        self.freqs_ = None
 
-        # HYBRID attributes
+        # learned attributes (post-fit)
+        self.cols_ = None
+        self.categories_ = {}
+        self.target_means_ = {}
+        self.freqs_ = {}
         self.brand_categories_ = None
-        self.model_encoders_ = {}   # one LabelEncoder per brand
-
+        self.model_encoders_ = {}
 
     def fit(self, X, y=None):
-        """
-        Learn the required statistics for each encoding method:
-        - unique categories (One-Hot)
-        - target means per category (Target Encoding)
-        - category frequencies (Frequency Encoding)
-        - brand categories and model encoders (Hybrid Encoding)
-        """
-        X = X.copy()
 
-        # auto-detect columns except in hybrid
-        if self.method in ["onehot", "target", "freq"] and self.cols is None:
+        # determine categorical columns to operate on
+        if self.cols is None:
             self.cols_ = X.select_dtypes(include=['object', 'category']).columns.tolist()
+        else:
+            # if user passed cols, keep those (but only existing ones)
+            self.cols_ = [c for c in list(self.cols) if c in X.columns]
 
-        # ------------------------------ ONE-HOT ------------------------------
+        # ONE-HOT
         if self.method == "onehot":
-            self.categories_ = {
-                col: X[col].unique().tolist() 
-                for col in self.cols_
-            }
+            # initialize the encoder
+            self.ohe_ = OneHotEncoder(
+                handle_unknown=self.handle_unknown,
+                sparse_output=False
+            )
 
-        # ------------------------------ TARGET ------------------------------
+            # fit only on categorical columns
+            self.ohe_.fit(X[self.cols_])
+
+
+        # TARGET
         elif self.method == "target":
             if y is None:
                 raise ValueError("Target variable 'y' must be provided for target encoding.")
-            self.target_means_ = {
-                col: X.groupby(col)[y.name].mean().to_dict()
-                for col in self.cols_
-            }
+            for col in self.cols_:
+                self.target_means_[col] = X.groupby(col)[y.name].mean().to_dict()
+            # store global means per column fallback
+            self._target_global_means = {col: X[y.name].mean() for col in self.cols_}
 
-        # ------------------------------ FREQUENCY ------------------------------
+        # FREQUENCY
         elif self.method == "freq":
-            self.freqs_ = {
-                col: X[col].value_counts(normalize=True).to_dict()
-                for col in self.cols_
-            }
+            for col in self.cols_:
+                self.freqs_[col] = X[col].value_counts(normalize=True).to_dict()
 
-        # ------------------------------ HYBRID ------------------------------
+        # HYBRID
         elif self.method == "hybrid":
-
-            # Ensure Brand and model exist
             if "Brand" not in X.columns or "model" not in X.columns:
                 raise ValueError("Hybrid encoding requires 'Brand' and 'model' columns.")
-
-            # 1. Learn all Brand categories
-            self.brand_categories_ = X["Brand"].unique().tolist()
-
-            # 2. For each brand, learn a label encoder for the models of that brand
+            self.brand_categories_ = X["Brand"].astype("object").dropna().unique().tolist()
             for brand in self.brand_categories_:
                 models = X.loc[X["Brand"] == brand, "model"].astype("category").cat.categories.tolist()
-                # create mapping starting at 1 (never 0)
                 mapping = {m: i+1 for i, m in enumerate(models)}
                 self.model_encoders_[brand] = mapping
 
         return self
-    
-    # In fit() -> learns categories, averages, frequencies.
-    # In transform() -> use this to convert text to numbers
-
 
     def transform(self, X):
-        """
-        Apply the encoding learned during fit().
-        """
-        X = X.copy() # avoid modifying original data
+        X = X.copy()
 
-        # ------------------------------ ONE-HOT ------------------------------
+        # ONE-HOT
         if self.method == "onehot":
-            for col in self.cols_:
-                for category in self.categories_[col]:
-                    X[f"{col}_{category}"] = (X[col] == category).astype(int)
+            # transform categorical columns using fitted encoder
+            ohe_array = self.ohe_.transform(X[self.cols_])
+
+            # assemble encoded features into DataFrame
+            ohe_df = pd.DataFrame(ohe_array, columns=self.ohe_.get_feature_names_out(), index=X.index)
+
+            # drop original categorical columns
             X = X.drop(columns=self.cols_)
 
-        # During fit() self.categories_[col] = list of categories that existed in training
-        # For each selected categorical column (self.cols):
-        # For each category learned in training:
-        # Creates new column
-        # Fills with 1 if matches category, else 0
-        # Finally, drops original categorical columns
+            # concatenate encoded columns
+            X = pd.concat([X, ohe_df], axis=1)
+            
 
-        # ------------------------------ TARGET ------------------------------
+        # TARGET
         elif self.method == "target":
             for col in self.cols_:
-                mapping = self.target_means_[col]
+                mapping = self.target_means_.get(col, {})
+                if col not in X.columns:
+                    continue
                 X[col] = X[col].map(mapping)
-                # handle unseen categories
                 if self.handle_unknown == "ignore":
-                    X[col] = X[col].fillna(X[col].mean())
+                    # fallback to global mean learned in fit (if available) or column mean
+                    fallback = self._target_global_means.get(col, X[col].mean())
+                    X[col] = X[col].fillna(fallback)
 
-        # ------------------------------ FREQUENCY ------------------------------
+        # FREQUENCY
         elif self.method == "freq":
             for col in self.cols_:
-                mapping = self.freqs_[col]
-                X[col] = X[col].map(mapping)
-                X[col] = X[col].fillna(0)  # unseen categories -> frequency 0
+                mapping = self.freqs_.get(col, {})
+                if col not in X.columns:
+                    continue
+                X[col] = X[col].map(mapping).fillna(0.0)
 
-        # ------------------------------ HYBRID ------------------------------
+        # HYBRID
         elif self.method == "hybrid":
+            # create Brand one-hot columns (or zero if Brand missing)
+            for brand in (self.brand_categories_ or []):
+                X[f"Brand_{brand}"] = (X.get("Brand", pd.Series(index=X.index)) == brand).astype(int)
 
-            # 1. One-hot brand columns
-            for brand in self.brand_categories_:
-                X[f"Brand_{brand}"] = (X["Brand"] == brand).astype(int)
+            # then replace 1s with model code where applicable
+            for brand in (self.brand_categories_ or []):
+                mask = X.get("Brand", pd.Series(index=X.index)) == brand
+                mapping = self.model_encoders_.get(brand, {})
+                if "model" in X.columns:
+                    mapped = X.loc[mask, "model"].map(mapping).fillna(0).astype(int)
+                    X.loc[mask, f"Brand_{brand}"] = mapped
+                else:
+                    X.loc[mask, f"Brand_{brand}"] = 0
 
-            # 2. Replace the "1" in Brand columns with model codes
-            for brand in self.brand_categories_:
-                mask = X["Brand"] == brand
-                mapping = self.model_encoders_[brand]
-
-                # Replace only where Brand == brand
-                X.loc[mask, f"Brand_{brand}"] = (
-                    X.loc[mask, "model"]
-                    .map(mapping)
-                    .fillna(0)   # unknown model → 0
-                    .astype(int)
-                )
-
-            # 3. Drop original columns
-            X = X.drop(columns=["Brand", "model"])
+            # drop original columns if exist
+            for c in ["Brand", "model"]:
+                if c in X.columns:
+                    X = X.drop(columns=[c])
 
         return X
