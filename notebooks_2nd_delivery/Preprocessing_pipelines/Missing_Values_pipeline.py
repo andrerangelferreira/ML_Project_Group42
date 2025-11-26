@@ -102,7 +102,7 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
 
             # Replace missing values before groupby
             #X_train_[["Brand"]] = self.imputer_brand.transform(X_train_[["Brand"]])
-            brand_imputed = self.imputer_brand.transform(X[["Brand"]])      #(TRYING THINGS TO SOLVE THE ERROR)
+            brand_imputed = self.imputer_brand.transform(X_train_[["Brand"]])      #(TRYING THINGS TO SOLVE THE ERROR)
             X_train_["Brand"] = pd.Series(brand_imputed.flatten(), index=X_train_.index)          
 
             #Imputers and scalers for numerical imputation
