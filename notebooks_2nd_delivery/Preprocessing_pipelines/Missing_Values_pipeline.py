@@ -221,7 +221,7 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
         elif self.imputation_method == "knn_brandwise":
 
             #Impute brand first
-            X["Brand"] = self.imputer_brand.transform(X[["Brand"]])
+            X[["Brand"]] = self.imputer_brand.transform(X[["Brand"]])
 
             # Split columns
             num_cols = X.select_dtypes(include=np.number).columns
