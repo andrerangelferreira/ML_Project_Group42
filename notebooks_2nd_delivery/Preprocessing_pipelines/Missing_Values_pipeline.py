@@ -99,8 +99,11 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
             self.imputer_brand = SimpleImputer(strategy="most_frequent")
             self.imputer_brand.fit(X_train_[["Brand"]])
 
+
             # Replace missing values before groupby
-            X_train_["Brand"] = self.imputer_brand.transform(X_train_[["Brand"]])
+            #X_train_[["Brand"]] = self.imputer_brand.transform(X_train_[["Brand"]])
+            brand_imputed = self.imputer_brand.transform(X[["Brand"]])      #(TRYING THINGS TO SOLVE THE ERROR)
+            X_train_["Brand"] = pd.Series(brand_imputed.flatten(), index=X_train_.index)          
 
             #Imputers and scalers for numerical imputation
             self.metric_features = X_train.select_dtypes(include=np.number).columns
@@ -221,7 +224,9 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
         elif self.imputation_method == "knn_brandwise":
 
             #Impute brand first
-            X[["Brand"]] = self.imputer_brand.transform(X[["Brand"]])
+            #X[["Brand"]] = self.imputer_brand.transform(X[["Brand"]])
+            brand_imputed = self.imputer_brand.transform(X[["Brand"]])  #(TRYING TO SOLVE AN ERROR)
+            X["Brand"] = brand_imputed.ravel()
 
             # Split columns
             num_cols = X.select_dtypes(include=np.number).columns
