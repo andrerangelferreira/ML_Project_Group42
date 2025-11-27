@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 
 from sklearn.preprocessing import OneHotEncoder
+from category_encoders import CountEncoder, TargetEncoder
+
 
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -47,20 +49,24 @@ class EncodingDealer(BaseEstimator, TransformerMixin):
             # fit only on categorical columns
             self.ohe_.fit(X[self.cols_])
 
-
         # TARGET
         elif self.method == "target":
             if y is None:
                 raise ValueError("Target variable 'y' must be provided for target encoding.")
-            for col in self.cols_:
-                self.target_means_[col] = X.groupby(col)[y.name].mean().to_dict()
-            # store global means per column fallback
-            self._target_global_means = {col: X[y.name].mean() for col in self.cols_}
+
+            # Create encoder for selected columns
+            self.target_encoder_ = TargetEncoder(cols=self.cols_)
+
+            # Fit encoder (X and y must be aligned)
+            self.target_encoder_.fit(X, y)
 
         # FREQUENCY
         elif self.method == "freq":
-            for col in self.cols_:
-                self.freqs_[col] = X[col].value_counts(normalize=True).to_dict()
+            # Create a count encoder for selected columns
+            self.freq_encoder_ = CountEncoder(cols=self.cols_)
+
+            # Fit it (does not use y)
+            self.freq_encoder_.fit(X)
 
         # HYBRID
         elif self.method == "hybrid":
@@ -94,23 +100,11 @@ class EncodingDealer(BaseEstimator, TransformerMixin):
 
         # TARGET
         elif self.method == "target":
-            for col in self.cols_:
-                mapping = self.target_means_.get(col, {})
-                if col not in X.columns:
-                    continue
-                X[col] = X[col].map(mapping)
-                if self.handle_unknown == "ignore":
-                    # fallback to global mean learned in fit (if available) or column mean
-                    fallback = self._target_global_means.get(col, X[col].mean())
-                    X[col] = X[col].fillna(fallback)
+            X = self.target_encoder_.transform(X)
 
         # FREQUENCY
         elif self.method == "freq":
-            for col in self.cols_:
-                mapping = self.freqs_.get(col, {})
-                if col not in X.columns:
-                    continue
-                X[col] = X[col].map(mapping).fillna(0.0)
+            X = self.freq_encoder_.transform(X)
 
         # HYBRID
         elif self.method == "hybrid":
