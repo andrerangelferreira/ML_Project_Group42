@@ -42,11 +42,11 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
         if self.imputation_method == "simple":
 
             #imputer for numerical
-            self.imputer_num = SimpleImputer(
+            self.imputer_num_ = SimpleImputer(
                 strategy=self.simple_strategy_num,
                 fill_value=self.fill_value
             )
-            self.imputer_num.fit(X_train.select_dtypes(include=np.number))
+            self.imputer_num_.fit(X_train.select_dtypes(include=np.number))
 
             #imputer for categorical
             self.imputer_cat = SimpleImputer(
@@ -76,10 +76,10 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
 
 
             #imputer for numerical
-            self.imputer_num = KNNImputer(
+            self.imputer_num_ = KNNImputer(
                 n_neighbors=self.knn_neighbors
             )
-            self.imputer_num.fit(scaled)
+            self.imputer_num_.fit(scaled)
 
             #imputer for categorical
             self.imputer_cat = SimpleImputer(
@@ -141,10 +141,10 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
         elif self.imputation_method == "iterative":
 
             #imputer for numerical
-            self.imputer_num = IterativeImputer(
+            self.imputer_num_ = IterativeImputer(
                 random_state=self.random_state
             )
-            self.imputer_num.fit(X_train.select_dtypes(include=np.number))
+            self.imputer_num_.fit(X_train.select_dtypes(include=np.number))
 
             #imputer for categorical
             self.imputer_cat = SimpleImputer(
@@ -168,7 +168,7 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
             cat_cols = X.select_dtypes(exclude=np.number).columns
 
             #impute
-            X_num_imputed = self.imputer_num.transform(X.select_dtypes(include=np.number))
+            X_num_imputed = self.imputer_num_.transform(X.select_dtypes(include=np.number))
             X_cat_imputed = self.imputer_cat.transform(X.select_dtypes(exclude=np.number))
 
             # Convert back to DataFrames
@@ -195,7 +195,7 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
             #Scale numeric values
             scaled = self.scaler.transform(X[num_cols])
             #impute scaled values
-            imputed_scaled = self.imputer_num.transform(scaled)
+            imputed_scaled = self.imputer_num_.transform(scaled)
 
             #inverse scale
             X_num_imputed = self.scaler.inverse_transform(imputed_scaled) 

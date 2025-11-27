@@ -184,7 +184,7 @@ class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
         return self
 
 
-    def transform(self, X, y=None, **kwargs):
+    def transform(self, X, y =None, **kwargs):
 
         X = X.copy()
 
