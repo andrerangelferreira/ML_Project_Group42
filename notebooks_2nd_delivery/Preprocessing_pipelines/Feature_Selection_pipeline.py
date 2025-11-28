@@ -152,10 +152,7 @@ class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
 
         # 5) Permutation importance
         elif self.selection_method == "permutation": # This method is for MLP
-
-            X = X.copy()
-            y = y.copy()
-
+            
             # Fit the base model
             self.model.fit(X, y)
 
