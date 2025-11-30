@@ -22,6 +22,12 @@ from sklearn.experimental import enable_halving_search_cv # noqa
 # now you can import normally from model_selection
 from sklearn.model_selection import HalvingRandomSearchCV
 
+# explicitly require this experimental feature
+from sklearn.experimental import enable_halving_search_cv 
+# now import normally from model_selection
+from sklearn.model_selection import HalvingRandomSearchCV
+
+
 # ------ Evaluation metrics ------
 from sklearn.metrics import (
     r2_score,
@@ -31,10 +37,17 @@ from sklearn.metrics import (
 )
 
 # ------ Machine Learning - Algorithms ------
-from sklearn.cluster import DBSCAN
-from sklearn.feature_selection import RFE
-from sklearn.linear_model import LinearRegression, LassoCV, Ridge, ElasticNet
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
+
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor, GradientBoostingRegressor, AdaBoostRegressor
+from sklearn.ensemble import HistGradientBoostingRegressor
+
+from sklearn.svm import SVR
+
+from sklearn.neighbors import KNeighborsRegressor
+
+from sklearn.neural_network import MLPClassifier
 
 # ------ Missing Data Imputation ------
 from sklearn.impute import KNNImputer

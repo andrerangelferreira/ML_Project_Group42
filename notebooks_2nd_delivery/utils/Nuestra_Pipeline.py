@@ -48,10 +48,10 @@ class NuestraPipeline(RegressorMixin, BaseEstimator):
 
         # Handle preprocessors that return only X or (X, y)
         if isinstance(output, tuple):
-            X, y = output
+            X, y_clean = output
         else:
             X = output
-            y = y
+            y_clean = y
 
         X = self.encoder.fit_transform(X, **kwargs)
 
@@ -61,7 +61,7 @@ class NuestraPipeline(RegressorMixin, BaseEstimator):
 
         # Clone for sklearn compatibility
         self.model_ = clone(self.model)
-        self.model_.fit(X_clean, y)
+        self.model_.fit(X_clean, y_clean)
 
         # Store for inspection
         self.X_ = X_clean
