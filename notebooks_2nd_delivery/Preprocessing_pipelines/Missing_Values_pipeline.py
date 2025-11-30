@@ -111,11 +111,7 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
 
             #Imputers and scalers for numerical imputation
             self.metric_features = X_train.select_dtypes(include=np.number).columns
-
-
-            # train global imputer & scaler (for the fall back, in case some brand not appearing in train, appear in validation)
-            self.global_scaler = StandardScaler().fit(X_train_[self.metric_features])
-            self.global_imputer = KNNImputer(n_neighbors=5).fit(X_train_[self.metric_features])    
+   
 
 
             # train brand-specific scalers and imputers
@@ -243,25 +239,7 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
             # Split columns
             num_cols = X.select_dtypes(include=np.number).columns
             cat_cols = X.select_dtypes(exclude=np.number).columns
-
-
-
-
-
-            #Identifying, which brands are not in the training data set (new_brands)
-            known_brands = set(self.scalers_.keys())
-            test_brands = set(X["Brand"])
-            new_brands = test_brands - known_brands
-
-            #Giving the global scaler and imputer to those brands
-            for b in new_brands:
-                self.scalers_[b] = self.global_scaler
-                self.imputers_[b] = self.global_imputer
-
-
-
-
-                
+            
 
 
             #Impute Numerical
