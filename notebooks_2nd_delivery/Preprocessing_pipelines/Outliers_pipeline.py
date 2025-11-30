@@ -81,8 +81,7 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
         elif self.outlier_method == "LOF":
             self.model = LocalOutlierFactor(
             n_neighbors=self.n_neighbors,
-            contamination=self.contamination_LOF,
-            novelty=True  # required for transform()
+            contamination=self.contamination_LOF
             )
             self.model.fit(X_train[self.model_columns])
 
@@ -129,4 +128,10 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
             preds = self.model.predict(X[self.model_columns])  # +1 = normal, -1 = outlier
             mask = preds == 1 #Storing the indexes from rows that are considered non outliers
             
-            return X[mask], y[mask] if y != None else X[mask]
+            X_filtered = X[mask].reset_index(drop=True)
+            y_filtered = y[mask].reset_index(drop=True) if y is not None else None
+
+            if y_filtered is not None:
+                return X_filtered, y_filtered
+            else:
+                return X_filtered
