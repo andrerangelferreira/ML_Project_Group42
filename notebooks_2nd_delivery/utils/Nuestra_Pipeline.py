@@ -42,6 +42,8 @@ class NuestraPipeline(RegressorMixin, BaseEstimator):
     def fit(self, X, y, **kwargs):
         """Fits the complete hermetic regression pipeline."""
 
+        X = self.imputer.fit_transform(X, **kwargs)
+
         output = self.outlier_remover.fit_transform(X, y, **kwargs)
 
         # Handle preprocessors that return only X or (X, y)
@@ -50,8 +52,6 @@ class NuestraPipeline(RegressorMixin, BaseEstimator):
         else:
             X = output
             y = y
-
-        X = self.imputer.fit_transform(X, **kwargs)
 
         X = self.encoder.fit_transform(X, **kwargs)
 
