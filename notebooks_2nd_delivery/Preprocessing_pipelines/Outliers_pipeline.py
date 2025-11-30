@@ -88,7 +88,8 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
 
             self.model_ = LocalOutlierFactor(
             n_neighbors=self.n_neighbors,
-            contamination=self.contamination_LOF
+            contamination=self.contamination_LOF, 
+            novelty= True
             )
             self.model_.fit(X_train[self.model_columns])
 
