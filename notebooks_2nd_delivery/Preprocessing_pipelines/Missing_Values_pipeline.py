@@ -42,11 +42,11 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
         if self.imputation_method == "simple":
 
             #imputer for numerical
-            self.imputer_num_ = SimpleImputer(
+            self.imputer_num = SimpleImputer(
                 strategy=self.simple_strategy_num,
                 fill_value=self.fill_value
             )
-            self.imputer_num_.fit(X_train.select_dtypes(include=np.number))
+            self.imputer_num.fit(X_train.select_dtypes(include=np.number))
 
             #imputer for categorical
             self.imputer_cat = SimpleImputer(
@@ -76,10 +76,10 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
 
 
             #imputer for numerical
-            self.imputer_num_ = KNNImputer(
+            self.imputer_num = KNNImputer(
                 n_neighbors=self.knn_neighbors
             )
-            self.imputer_num_.fit(scaled)
+            self.imputer_num.fit(scaled)
 
             #imputer for categorical
             self.imputer_cat = SimpleImputer(
@@ -99,11 +99,22 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
             self.imputer_brand = SimpleImputer(strategy="most_frequent")
             self.imputer_brand.fit(X_train_[["Brand"]])
 
+
             # Replace missing values before groupby
-            X_train_["Brand"] = self.imputer_brand.transform(X_train_[["Brand"]])
+            #X_train_[["Brand"]] = self.imputer_brand.transform(X_train_[["Brand"]])
+            brand_imputed = self.imputer_brand.transform(X_train_[["Brand"]])      #(TRYING THINGS TO SOLVE THE ERROR)
+            X_train_["Brand"] = pd.Series(brand_imputed.flatten(), index=X_train_.index)          
+
+
+
+
 
             #Imputers and scalers for numerical imputation
             self.metric_features = X_train.select_dtypes(include=np.number).columns
+   
+
+
+            # train brand-specific scalers and imputers
 
             self.scalers_ = {}   # scaler per brand
             self.imputers_ = {}  # knn imputer per brand
@@ -141,10 +152,10 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
         elif self.imputation_method == "iterative":
 
             #imputer for numerical
-            self.imputer_num_ = IterativeImputer(
+            self.imputer_num = IterativeImputer(
                 random_state=self.random_state
             )
-            self.imputer_num_.fit(X_train.select_dtypes(include=np.number))
+            self.imputer_num.fit(X_train.select_dtypes(include=np.number))
 
             #imputer for categorical
             self.imputer_cat = SimpleImputer(
@@ -168,7 +179,7 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
             cat_cols = X.select_dtypes(exclude=np.number).columns
 
             #impute
-            X_num_imputed = self.imputer_num_.transform(X.select_dtypes(include=np.number))
+            X_num_imputed = self.imputer_num.transform(X.select_dtypes(include=np.number))
             X_cat_imputed = self.imputer_cat.transform(X.select_dtypes(exclude=np.number))
 
             # Convert back to DataFrames
@@ -195,7 +206,7 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
             #Scale numeric values
             scaled = self.scaler.transform(X[num_cols])
             #impute scaled values
-            imputed_scaled = self.imputer_num_.transform(scaled)
+            imputed_scaled = self.imputer_num.transform(scaled)
 
             #inverse scale
             X_num_imputed = self.scaler.inverse_transform(imputed_scaled) 
@@ -221,11 +232,14 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
         elif self.imputation_method == "knn_brandwise":
 
             #Impute brand first
-            X["Brand"] = self.imputer_brand.transform(X[["Brand"]])
+            #X[["Brand"]] = self.imputer_brand.transform(X[["Brand"]])
+            brand_imputed = self.imputer_brand.transform(X[["Brand"]])  #(TRYING TO SOLVE AN ERROR)
+            X["Brand"] = brand_imputed.ravel()
 
             # Split columns
             num_cols = X.select_dtypes(include=np.number).columns
             cat_cols = X.select_dtypes(exclude=np.number).columns
+            
 
 
             #Impute Numerical

@@ -9,7 +9,7 @@ from sklearn.neighbors import LocalOutlierFactor
 class OutliersDealer(BaseEstimator, TransformerMixin):
 
     def __init__(self, 
-                 outlier_method = "z-score", # the default method
+                 outlier_method = "z_score", # the default method
                  mod_outliers_cols = [],
                  sev_outliers_cols = [],
                  threshold=3, # Pick 2 or 3 as the threshold value of "z"
@@ -61,7 +61,7 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
                 self.q3_[col] = q3
                 self.iqr_[col] = iqr
         
-        elif self.outlier_method == "z-score":
+        elif self.outlier_method == "z_score":
 
             self.means_ = {}
             self.stds_ = {}
@@ -115,7 +115,7 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
             return X
                 
         
-        elif self.outlier_method == "z-score":
+        elif self.outlier_method == "z_score":
 
             for col in self.z_columns:
 

@@ -18,6 +18,12 @@ from sklearn.preprocessing import (
 )
 from sklearn.model_selection import train_test_split, RandomizedSearchCV
 
+# explicitly require this experimental feature
+from sklearn.experimental import enable_halving_search_cv 
+# now import normally from model_selection
+from sklearn.model_selection import HalvingRandomSearchCV
+
+
 # ------ Evaluation metrics ------
 from sklearn.metrics import (
     r2_score,
