@@ -57,7 +57,7 @@ class NuestraPipeline(RegressorMixin, BaseEstimator):
 
         X = self.scaler.fit_transform(X, **kwargs)
 
-        X_clean = self.selector.fit_transform(X, y, **kwargs)
+        X_clean = self.selector.fit_transform(X, y_clean, **kwargs)
 
         # Clone for sklearn compatibility
         self.model_ = clone(self.model)
