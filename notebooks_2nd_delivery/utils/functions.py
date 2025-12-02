@@ -16,7 +16,7 @@ from sklearn.preprocessing import (
     OneHotEncoder, 
     LabelEncoder
 )
-from sklearn.model_selection import train_test_split, RandomizedSearchCV
+from sklearn.model_selection import train_test_split, RandomizedSearchCV, cross_val_score
 
 # explicitly require this experimental feature
 from sklearn.experimental import enable_halving_search_cv 
@@ -57,6 +57,8 @@ from rapidfuzz import process, fuzz
 
 # ------ Pipeline ------
 from sklearn.pipeline import Pipeline
+
+import joblib
 
 
 def normalize_text(x):
