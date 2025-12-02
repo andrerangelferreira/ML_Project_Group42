@@ -28,7 +28,7 @@ class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
         self,
         selection_method="variance",   # Method options: "variance", "kbest", "model", "rfe"
         threshold=0.0,                  # for variance threshold
-        k=10,                           # for SelectKBest    
+        k=15,                           # for SelectKBest    
         model_name= "rf",               # model acronym
         n_features_to_select=None,      # for RFE
         random_state=42,
