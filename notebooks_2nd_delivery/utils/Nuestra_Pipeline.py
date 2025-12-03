@@ -39,6 +39,9 @@ class NuestraPipeline(RegressorMixin, BaseEstimator):
         self.selector = selector
         self.model = model
 
+        for parameter, value in kwargs.items():  #these lines are used to store the hyperparameter values that come from the searches
+            setattr(self, parameter, value)
+
     def fit(self, X, y, **kwargs):
         """Fits the complete hermetic regression pipeline."""
 
