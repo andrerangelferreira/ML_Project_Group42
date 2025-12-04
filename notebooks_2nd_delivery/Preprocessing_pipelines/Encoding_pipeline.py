@@ -55,11 +55,7 @@ class EncodingDealer(BaseEstimator, TransformerMixin):
                 raise ValueError("Target variable 'y' must be provided for target encoding.")
 
             # Create encoder for selected columns
-            self.target_encoder_ = TargetEncoder(
-                cols=self.cols_,
-                smoothing=0.3,
-                min_samples_leaf=50
-            )
+            self.target_encoder_ = TargetEncoder(cols=self.cols_)
 
             # Fit encoder (X and y must be aligned)
             self.target_encoder_.fit(X[self.cols_], y)
@@ -93,18 +89,18 @@ class EncodingDealer(BaseEstimator, TransformerMixin):
             
         # TARGET
         elif self.method == "target":
-            
-            ## transform
-            target_df = self.target_encoder_.transform(X[self.cols_])
+            # transform categorical columns using fitted encoder
+            target_array = self.target_encoder_.transform(X[self.cols_])
 
-            # fillna with GLOBAL MEAN of each encoded column
-            target_df = target_df.fillna(self.target_encoder_.mapping)
+            # assemble encoded features into DataFrame
+            target_df = pd.DataFrame(target_array, columns=self.target_encoder_.get_feature_names_out(), index=X.index)
 
             # drop original categorical columns
             X = X.drop(columns=self.cols_)
 
             # concatenate encoded columns
             X = pd.concat([X, target_df], axis=1)
+
 
         # FREQUENCY
         elif self.method == "freq":
