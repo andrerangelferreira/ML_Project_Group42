@@ -191,7 +191,6 @@ def evaluate_best_model_with_cv(best_model, X, y, cv=5):
         y_val_fold = y.iloc[val_idx] if hasattr(y, 'iloc') else y[val_idx]
         
         # Clone and train model on this fold
-        from sklearn.base import clone
         fold_model = clone(best_model)
         fold_model.fit(X_train_fold, y_train_fold)
         
