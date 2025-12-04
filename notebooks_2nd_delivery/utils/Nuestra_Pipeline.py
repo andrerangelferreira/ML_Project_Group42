@@ -53,7 +53,7 @@ class NuestraPipeline(RegressorMixin, BaseEstimator):
             X = output
             y_clean = y
 
-        X = self.encoder.fit_transform(X, **kwargs)
+        X = self.encoder.fit_transform(X, y_clean, **kwargs)
 
         X = self.scaler.fit_transform(X, **kwargs)
 
