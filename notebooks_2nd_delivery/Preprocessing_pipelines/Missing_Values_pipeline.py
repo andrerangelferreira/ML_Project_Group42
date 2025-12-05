@@ -12,13 +12,14 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
 
     def __init__(
         self,
-        imputation_method="simple",  # "simple", "knn", "iterative"
+        imputation_method="simple",  # "simple", "knn", "iterative", "knn-brandwise", "knn-modelwise"
         simple_strategy_num="mean",      # for simple imputer with numerical
         strategy_cat="most_frequent", #  imputer for categorical
         fill_value=None,             # used if strategy="constant"
-        knn_neighbors=5,
+        knn_neighbors=5,           
         random_state=42,
         knn_scaling_method= "standard",
+        min_model_size_for_knn=15,   #min_model_size_for_knn can never be lower than knn_neighbors
         **kwargs
     ):
         self.imputation_method = imputation_method
@@ -34,6 +35,9 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
 
         # Iterative imputer
         self.random_state = random_state
+
+        #knn-modelwise
+        self.min_model_size_for_knn = min_model_size_for_knn
 
     def fit(self, X_train, **kwargs):
 
@@ -105,15 +109,9 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
             brand_imputed = self.imputer_brand.transform(X_train_[["Brand"]])      #(TRYING THINGS TO SOLVE THE ERROR)
             X_train_["Brand"] = pd.Series(brand_imputed.flatten(), index=X_train_.index)          
 
-
-
-
-
             #Imputers and scalers for numerical imputation
             self.metric_features = X_train.select_dtypes(include=np.number).columns
    
-
-
             # train brand-specific scalers and imputers
 
             self.scalers_ = {}   # scaler per brand
@@ -146,6 +144,72 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
                 fill_value=self.fill_value
             )
             self.imputer_cat.fit(X_train.select_dtypes(exclude=np.number))
+
+        # ----- FITTING WITH KNN MODELWISE IMPUTER -----
+
+        elif self.imputation_method == "knn_modelwise":
+
+            X_train_ = X_train.copy()
+
+            # Impute model first
+            self.imputer_model = SimpleImputer(strategy="most_frequent")
+            X_train_["model"] = self.imputer_model.fit_transform(X_train_[["model"]]).ravel() #fit_transform returns a 2D array, so we have to ravel it to have a 1D array, therefore we would get an error
+
+            # Identify numeric features
+            self.metric_features = X_train_.select_dtypes(include=np.number).columns
+
+            # Count the number of cars per model
+            model_counts = X_train_["model"].value_counts()
+
+            # Store rare models
+            self.rare_models_ = model_counts[model_counts < self.min_model_size_for_knn].index.tolist()
+
+            # Prepare dictionaries
+            self.scalers_ = {}
+            self.imputers_ = {}
+            self.model_medians_ = {}
+
+            #GLOBAL fallback scaler and imputer for unseen models 
+            if self.knn_scaling_method == "standard":
+                self.global_scaler_ = StandardScaler()
+            elif self.knn_scaling_method == "minmax":
+                self.global_scaler_ = MinMaxScaler()
+            elif self.knn_scaling_method == "robust":
+                self.global_scaler_ = RobustScaler()
+
+            scaled_global = self.global_scaler_.fit_transform(X_train_[self.metric_features])
+            self.global_imputer_ = KNNImputer(n_neighbors=self.knn_neighbors).fit(scaled_global)
+
+            #Fit model-specific imputers
+            for model, df_model in X_train_.groupby("model"):
+
+                # - Model too rare we store medians of the model
+                if model in self.rare_models_:
+                    self.model_medians_[model] = df_model[self.metric_features].median()
+                    continue  #we use continue so that the code doesn't have to verify the other condition and skip to the next model
+
+                # - Model as enough cars we fit scaler and knn
+                if self.knn_scaling_method == "standard":
+                    scaler = StandardScaler()
+                elif self.knn_scaling_method == "minmax":
+                    scaler = MinMaxScaler()
+                elif self.knn_scaling_method == "robust":
+                    scaler = RobustScaler()
+
+                scaled = scaler.fit_transform(df_model[self.metric_features])
+                imputer = KNNImputer(n_neighbors=self.knn_neighbors).fit(scaled)
+
+                self.scalers_[model] = scaler
+                self.imputers_[model] = imputer
+
+            # Fit categorical imputer
+            self.imputer_cat = SimpleImputer(
+                strategy=self.strategy_cat,
+                fill_value=self.fill_value
+            )
+            self.imputer_cat.fit(X_train_.select_dtypes(exclude=np.number))
+
+
 
         # ----- FITTING WITH ITERATIVE IMPUTER -----       
 
@@ -272,6 +336,62 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
             X_imputed = X_imputed[X.columns]
 
             #Correcting previousOwners that should only have integers 
+            X_imputed["previousOwners"] = X_imputed["previousOwners"].round()
+
+            return X_imputed
+        
+
+        # ----- MODEL-WISE KNN IMPUTATION -----
+        elif self.imputation_method == "knn_modelwise":
+
+            # Impute model first
+            X["model"] = self.imputer_model.transform(X[["model"]]).ravel() #we use ravel for the same reason as before
+
+            num_cols = X.select_dtypes(include=np.number).columns
+            cat_cols = X.select_dtypes(exclude=np.number).columns
+
+            imputed_list = []
+
+            for model, df_model in X.groupby("model"):
+
+                df_temp = df_model.copy()
+
+                # Use global scaler and global KNN for unseen models in the trainning set
+                if model not in self.scalers_ and model not in self.rare_models_:
+                    scaled = self.global_scaler_.transform(df_temp[self.metric_features])
+                    imputed_scaled = self.global_imputer_.transform(scaled)
+                    df_temp[self.metric_features] = self.global_scaler_.inverse_transform(imputed_scaled)
+                    imputed_list.append(df_temp[self.metric_features])
+                    continue
+
+                # Use the median to impute rare models
+                if model in self.rare_models_:
+                    df_temp[self.metric_features] = df_temp[self.metric_features].fillna(self.model_medians_[model])
+                    imputed_list.append(df_temp[self.metric_features])
+                    continue
+
+                # Use scaler and KNN for models with enough cars
+                scaler = self.scalers_[model]
+                imputer = self.imputers_[model]
+
+                scaled = scaler.transform(df_temp[self.metric_features])
+                imputed_scaled = imputer.transform(scaled)
+                df_temp[self.metric_features] = scaler.inverse_transform(imputed_scaled)
+
+                imputed_list.append(df_temp[self.metric_features])
+
+            # Reassemble numeric values
+            X_num_imputed = pd.concat(imputed_list, axis=0).loc[X.index]
+
+            # Categorical imputation
+            X_cat_imputed = self.imputer_cat.transform(X[cat_cols])
+            df_cat = pd.DataFrame(X_cat_imputed, columns=cat_cols, index=X.index)
+
+            # Combine
+            X_imputed = pd.concat([X_num_imputed, df_cat], axis=1)
+            X_imputed = X_imputed[X.columns]
+
+            # Fix previousOwners by rounding
             X_imputed["previousOwners"] = X_imputed["previousOwners"].round()
 
             return X_imputed
