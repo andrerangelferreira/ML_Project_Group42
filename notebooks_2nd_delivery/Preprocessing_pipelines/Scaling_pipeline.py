@@ -22,7 +22,7 @@ class ScalingDealer(BaseEstimator, TransformerMixin):
             "standard": StandardScaler
         }
 
-        self.cols_to_scale_ = ["car_age", "mileage", "tax", "mpg", "engineSize", "paintQuality%", "previousOwners"]
+        self.cols_to_scale_ = ["car_age", "mileage", "tax", "mpg", "engineSize", "previousOwners"]
 
         self.scaler_ = scalers[self.scaler_name]().fit(X[self.cols_to_scale_])
         return self
