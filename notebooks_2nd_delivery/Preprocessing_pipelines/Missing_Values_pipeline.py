@@ -12,7 +12,7 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
 
     def __init__(
         self,
-        imputation_method="simple",  # "simple", "knn", "iterative", "knn-brandwise", "knn-modelwise"
+        imputation_method="simple",  # "simple", "knn", "iterative", "knn-brandwise", "knn_modelwise"
         simple_strategy_num="mean",      # for simple imputer with numerical
         strategy_cat="most_frequent", #  imputer for categorical
         fill_value=None,             # used if strategy="constant"

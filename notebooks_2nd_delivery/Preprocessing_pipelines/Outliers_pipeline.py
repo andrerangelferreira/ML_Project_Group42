@@ -82,9 +82,9 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
             for col in self.log_columns:
                 min_val = X_train[col].min()
 
-                # If column has zeros, shift by 1, so that log(x + 1)
-                if min_val == 0:
-                    self.log_offsets_[col] = 1
+                # If the column has non-positive values, shift it
+                if min_val <= 0:
+                    self.log_offsets_[col] = 1 - min_val
                 else:
                     self.log_offsets_[col] = 0
 
@@ -159,7 +159,7 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
         elif self.outlier_method == "log":
 
             for col in self.log_columns:
-                offset = self.log_offsets_[col]
+                offset = self.log_offsets_.get(col, 0)
                 X[col] = np.log(X[col] + offset)
 
             return X
