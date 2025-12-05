@@ -12,7 +12,7 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
 
     def __init__(
         self,
-        imputation_method="simple",  # "simple", "knn", "iterative", "knn-brandwise", "knn-modelwise"
+        imputation_method="simple",  # "simple", "knn", "iterative", "knn_brandwise", "knn_modelwise"
         simple_strategy_num="mean",      # for simple imputer with numerical
         strategy_cat="most_frequent", #  imputer for categorical
         fill_value=None,             # used if strategy="constant"
@@ -364,9 +364,23 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
                     imputed_list.append(df_temp[self.metric_features])
                     continue
 
-                # Use the median to impute rare models
+                # Use the median to impute rare models or global KNN for columns with only missing values 
                 if model in self.rare_models_:
-                    df_temp[self.metric_features] = df_temp[self.metric_features].fillna(self.model_medians_[model])
+                    median_values = self.model_medians_[model] #getting all the medians from that model
+                    
+                    # Columns where median is NaN (all values missing)
+                    cols_missing = median_values[median_values.isna()].index.tolist() 
+
+                    # Fill available medians
+                    df_temp[self.metric_features] = df_temp[self.metric_features].fillna(median_values)
+
+                    # Fill completely missing columns with global imputer
+                    if cols_missing: #if there is any column inside that specific model that only has missing values, it will enter this if statement and will be filled with global knn 
+                        scaled = self.global_scaler_.transform(df_temp[cols_missing])
+                        imputed_scaled = self.global_imputer_.transform(scaled)
+                        df_temp[cols_missing] = self.global_scaler_.inverse_transform(imputed_scaled)
+
+                    #Appending the resulting imputed dataframe to imputed_list    
                     imputed_list.append(df_temp[self.metric_features])
                     continue
 
