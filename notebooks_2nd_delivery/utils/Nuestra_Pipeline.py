@@ -3,6 +3,7 @@ import pandas as pd
 
 from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.class_weight import compute_sample_weight
 
 class NuestraPipeline(RegressorMixin, BaseEstimator):
 
@@ -30,6 +31,7 @@ class NuestraPipeline(RegressorMixin, BaseEstimator):
         scaler,
         selector,
         model, 
+        q = 10,
         **kwargs
     ):
         self.outlier_remover = outlier_remover
@@ -38,6 +40,7 @@ class NuestraPipeline(RegressorMixin, BaseEstimator):
         self.scaler = scaler
         self.selector = selector
         self.model = model
+        self.q = q
 
     def fit(self, X, y, **kwargs):
         """Fits the complete hermetic regression pipeline."""
@@ -59,8 +62,13 @@ class NuestraPipeline(RegressorMixin, BaseEstimator):
 
         X_clean = self.selector.fit_transform(X, y_clean, **kwargs)
 
+        # Create weights inversely proportional to price frequency
+        #price_bins = pd.qcut(y_clean, q = self.q, labels=False)  # Divide into deciles
+        #sample_weights = compute_sample_weight('balanced', price_bins)
+
         # Clone for sklearn compatibility
         self.model_ = clone(self.model)
+        #self.model_.fit(X_clean, y_clean, sample_weights = sample_weights)
         self.model_.fit(X_clean, y_clean)
 
         # Store for inspection
