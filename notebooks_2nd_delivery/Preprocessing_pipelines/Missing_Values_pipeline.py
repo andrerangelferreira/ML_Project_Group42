@@ -12,14 +12,14 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
 
     def __init__(
         self,
-        imputation_method="simple",  # "simple", "knn", "iterative"
+        imputation_method="simple",  # "simple", "knn", "iterative", "knn-brandwise", "knn-modelwise"
         simple_strategy_num="mean",      # for simple imputer with numerical
         strategy_cat="most_frequent", #  imputer for categorical
         fill_value=None,             # used if strategy="constant"
-        knn_neighbors=5,
+        knn_neighbors=5,           
         random_state=42,
         knn_scaling_method= "standard",
-        min_model_size_for_knn=15,
+        min_model_size_for_knn=15,   #min_model_size_for_knn can never be lower than knn_neighbors
         **kwargs
     ):
         self.imputation_method = imputation_method
@@ -109,15 +109,9 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
             brand_imputed = self.imputer_brand.transform(X_train_[["Brand"]])      #(TRYING THINGS TO SOLVE THE ERROR)
             X_train_["Brand"] = pd.Series(brand_imputed.flatten(), index=X_train_.index)          
 
-
-
-
-
             #Imputers and scalers for numerical imputation
             self.metric_features = X_train.select_dtypes(include=np.number).columns
    
-
-
             # train brand-specific scalers and imputers
 
             self.scalers_ = {}   # scaler per brand
@@ -159,7 +153,7 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
 
             # Impute model first
             self.imputer_model = SimpleImputer(strategy="most_frequent")
-            X_train_["model"] = self.imputer_model.fit_transform(X_train_[["model"]])
+            X_train_["model"] = self.imputer_model.fit_transform(X_train_[["model"]]).ravel() #fit_transform returns a 2D array, so we have to ravel it to have a 1D array, therefore we would get an error
 
             # Identify numeric features
             self.metric_features = X_train_.select_dtypes(include=np.number).columns
@@ -351,7 +345,7 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
         elif self.imputation_method == "knn_modelwise":
 
             # Impute model first
-            X["model"] = self.imputer_model.transform(X[["model"]])
+            X["model"] = self.imputer_model.transform(X[["model"]]).ravel() #we use ravel for the same reason as before
 
             num_cols = X.select_dtypes(include=np.number).columns
             cat_cols = X.select_dtypes(exclude=np.number).columns
