@@ -185,8 +185,10 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
 
                 # - Model too rare we store medians of the model
                 if model in self.rare_models_:
-                    self.model_medians_[model] = df_model[self.metric_features].median()
-                    continue  #we use continue so that the code doesn't have to verify the other condition and skip to the next model
+                    median_values = df_model[self.metric_features].median()
+                    # keep NaN if all values missing; we'll handle it in transform
+                    self.model_medians_[model] = median_values
+                    continue   #we use continue so that the code doesn't have to verify the other condition and skip to the next model
 
                 # - Model as enough cars we fit scaler and knn
                 if self.knn_scaling_method == "standard":
@@ -375,10 +377,21 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
                     df_temp[self.metric_features] = df_temp[self.metric_features].fillna(median_values)
 
                     # Fill completely missing columns with global imputer
-                    if cols_missing: #if there is any column inside that specific model that only has missing values, it will enter this if statement and will be filled with global knn 
-                        scaled = self.global_scaler_.transform(df_temp[cols_missing])
-                        imputed_scaled = self.global_imputer_.transform(scaled)
-                        df_temp[cols_missing] = self.global_scaler_.inverse_transform(imputed_scaled)
+                    if cols_missing:
+                        #Getting the all df_temp fill with global knn, because we need all columns seen in fit to use it
+                        scaled_full = self.global_scaler_.transform(df_temp[self.metric_features])
+                        imputed_full = self.global_imputer_.transform(scaled_full)
+                        imputed_full = self.global_scaler_.inverse_transform(imputed_full)
+
+                        # Getting it as a dataframe
+                        df_imputed_full = pd.DataFrame(
+                            imputed_full,
+                            columns=self.metric_features,
+                            index=df_temp.index
+                        )
+
+                        # Only replacing the columns of df_temp where there were only missing values
+                        df_temp[cols_missing] = df_imputed_full[cols_missing]
 
                     #Appending the resulting imputed dataframe to imputed_list    
                     imputed_list.append(df_temp[self.metric_features])
