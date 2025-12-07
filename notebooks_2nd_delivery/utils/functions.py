@@ -159,7 +159,7 @@ def calculate_regression_metrics(y_true, y_pred):
     return r2, mae, rmse
 
 
-def evaluate_best_model_with_cv(best_model, X, y, cv=5):
+def evaluate_best_model_with_cv(best_model, X, y, model_name, cv=5):
     """
     Performs k-fold cross-validation and plots predictions vs actual values 
     for both train and validation folds.
@@ -221,7 +221,7 @@ def evaluate_best_model_with_cv(best_model, X, y, cv=5):
                  [train_actuals.min(), train_actuals.max()], 'r--', lw=2, label='Perfect Prediction')
     axes[0].set_xlabel('Actual Values', fontsize=12)
     axes[0].set_ylabel('Predicted Values', fontsize=12)
-    axes[0].set_title(f'Training Results\nR²={train_r2:.4f}, MAE={train_mae:.2f}, RMSE={train_rmse:.2f}', 
+    axes[0].set_title(f'Training Results of {model_name}\nR²={train_r2:.4f}, MAE={train_mae:.2f}, RMSE={train_rmse:.2f}', 
                       fontsize=12, fontweight='bold')
     axes[0].legend()
     axes[0].grid(True, alpha=0.3)
@@ -232,7 +232,7 @@ def evaluate_best_model_with_cv(best_model, X, y, cv=5):
     axes[1].plot([y_min, y_max], [y_min, y_max], 'r--', lw=2, label='Perfect Prediction')
     axes[1].set_xlabel('Actual Values', fontsize=12)
     axes[1].set_ylabel('Predicted Values', fontsize=12)
-    axes[1].set_title(f'Validation Results\nR²={val_r2:.4f}, MAE={val_mae:.2f}, RMSE={val_rmse:.2f}', 
+    axes[1].set_title(f'Validation Resultsof {model_name}\nR²={val_r2:.4f}, MAE={val_mae:.2f}, RMSE={val_rmse:.2f}', 
                       fontsize=12, fontweight='bold')
     axes[1].legend()
     axes[1].grid(True, alpha=0.3)
