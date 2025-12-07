@@ -25,8 +25,8 @@ class NuestraPipeline(RegressorMixin, BaseEstimator):
     
     def __init__(
         self, 
-        outlier_remover,
         imputer,
+        outlier_remover,
         encoder,
         scaler,
         selector,
@@ -34,8 +34,9 @@ class NuestraPipeline(RegressorMixin, BaseEstimator):
         q = 10,
         **kwargs
     ):
-        self.outlier_remover = outlier_remover
+
         self.imputer = imputer
+        self.outlier_remover = outlier_remover
         self.encoder = encoder
         self.scaler = scaler
         self.selector = selector
@@ -63,13 +64,13 @@ class NuestraPipeline(RegressorMixin, BaseEstimator):
         X_clean = self.selector.fit_transform(X, y_clean, **kwargs)
 
         # Create weights inversely proportional to price frequency
-        #price_bins = pd.qcut(y_clean, q = self.q, labels=False)  # Divide into deciles
-        #sample_weights = compute_sample_weight('balanced', price_bins)
+        price_bins = pd.qcut(y_clean, q = self.q, labels=False)  # Divide into deciles
+        sample_weights = compute_sample_weight('balanced', price_bins)
 
         # Clone for sklearn compatibility
         self.model_ = clone(self.model)
-        #self.model_.fit(X_clean, y_clean, sample_weights = sample_weights)
-        self.model_.fit(X_clean, y_clean)
+        self.model_.fit(X_clean, y_clean, sample_weight = sample_weights)
+        #self.model_.fit(X_clean, y_clean)
 
         # Store for inspection
         self.X_ = X_clean

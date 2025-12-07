@@ -65,8 +65,8 @@ class EncodingDealer(BaseEstimator, TransformerMixin):
             # Create a count encoder for selected columns
             self.freq_encoder_ = CountEncoder(cols=self.cols_)
 
-            # Fit it (does not use y)
-            self.freq_encoder_.fit(X)
+            # Fit encoder (X and y must be aligned)
+            self.freq_encoder_.fit(X[self.cols_], y)
 
         return self
 
@@ -104,6 +104,16 @@ class EncodingDealer(BaseEstimator, TransformerMixin):
 
         # FREQUENCY
         elif self.method == "freq":
-            X = self.freq_encoder_.transform(X)
+            # transform categorical columns using fitted encoder
+            freq_array = self.freq_encoder_.transform(X[self.cols_])
+
+            # assemble encoded features into DataFrame
+            freq_df = pd.DataFrame(freq_array, columns=self.freq_encoder_.get_feature_names_out(), index=X.index)
+
+            # drop original categorical columns
+            X = X.drop(columns=self.cols_)
+
+            # concatenate encoded columns
+            X = pd.concat([X, freq_df], axis=1)
 
         return X
