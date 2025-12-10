@@ -10,7 +10,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 class EncodingDealer(BaseEstimator, TransformerMixin):
     def __init__(
         self,
-        method="onehot",         # "onehot", "target", "freq", "hybrid"
+        method="onehot",         # "onehot", "target", "freq"
         cols=None,
         handle_unknown="ignore",
         min_freq=0,
@@ -58,25 +58,15 @@ class EncodingDealer(BaseEstimator, TransformerMixin):
             self.target_encoder_ = TargetEncoder(cols=self.cols_)
 
             # Fit encoder (X and y must be aligned)
-            self.target_encoder_.fit(X, y)
+            self.target_encoder_.fit(X[self.cols_], y)
 
         # FREQUENCY
         elif self.method == "freq":
             # Create a count encoder for selected columns
             self.freq_encoder_ = CountEncoder(cols=self.cols_)
 
-            # Fit it (does not use y)
-            self.freq_encoder_.fit(X)
-
-        # HYBRID
-        elif self.method == "hybrid":
-            if "Brand" not in X.columns or "model" not in X.columns:
-                raise ValueError("Hybrid encoding requires 'Brand' and 'model' columns.")
-            self.brand_categories_ = X["Brand"].astype("object").dropna().unique().tolist()
-            for brand in self.brand_categories_:
-                models = X.loc[X["Brand"] == brand, "model"].astype("category").cat.categories.tolist()
-                mapping = {m: i+1 for i, m in enumerate(models)}
-                self.model_encoders_[brand] = mapping
+            # Fit encoder (X and y must be aligned)
+            self.freq_encoder_.fit(X[self.cols_], y)
 
         return self
 
@@ -97,34 +87,33 @@ class EncodingDealer(BaseEstimator, TransformerMixin):
             # concatenate encoded columns
             X = pd.concat([X, ohe_df], axis=1)
             
-
         # TARGET
         elif self.method == "target":
-            X = self.target_encoder_.transform(X)
+            # transform categorical columns using fitted encoder
+            target_array = self.target_encoder_.transform(X[self.cols_])
+
+            # assemble encoded features into DataFrame
+            target_df = pd.DataFrame(target_array, columns=self.target_encoder_.get_feature_names_out(), index=X.index)
+
+            # drop original categorical columns
+            X = X.drop(columns=self.cols_)
+
+            # concatenate encoded columns
+            X = pd.concat([X, target_df], axis=1)
+
 
         # FREQUENCY
         elif self.method == "freq":
-            X = self.freq_encoder_.transform(X)
+            # transform categorical columns using fitted encoder
+            freq_array = self.freq_encoder_.transform(X[self.cols_])
 
-        # HYBRID
-        elif self.method == "hybrid":
-            # create Brand one-hot columns (or zero if Brand missing)
-            for brand in (self.brand_categories_ or []):
-                X[f"Brand_{brand}"] = (X.get("Brand", pd.Series(index=X.index)) == brand).astype(int)
+            # assemble encoded features into DataFrame
+            freq_df = pd.DataFrame(freq_array, columns=self.freq_encoder_.get_feature_names_out(), index=X.index)
 
-            # then replace 1s with model code where applicable
-            for brand in (self.brand_categories_ or []):
-                mask = X.get("Brand", pd.Series(index=X.index)) == brand
-                mapping = self.model_encoders_.get(brand, {})
-                if "model" in X.columns:
-                    mapped = X.loc[mask, "model"].map(mapping).fillna(0).astype(int)
-                    X.loc[mask, f"Brand_{brand}"] = mapped
-                else:
-                    X.loc[mask, f"Brand_{brand}"] = 0
+            # drop original categorical columns
+            X = X.drop(columns=self.cols_)
 
-            # drop original columns if exist
-            for c in ["Brand", "model"]:
-                if c in X.columns:
-                    X = X.drop(columns=[c])
+            # concatenate encoded columns
+            X = pd.concat([X, freq_df], axis=1)
 
         return X

@@ -4,6 +4,7 @@ import re
 # ------ Data Manipulation ------
 import pandas as pd
 import numpy as np
+import ast
 
 # ------ Visualization ------
 import matplotlib.pyplot as plt   # use pyplot instead of pylab
@@ -16,18 +17,13 @@ from sklearn.preprocessing import (
     OneHotEncoder, 
     LabelEncoder
 )
-from sklearn.model_selection import train_test_split, RandomizedSearchCV
-# explicitly require this experimental feature
-from sklearn.experimental import enable_halving_search_cv # noqa
-# now you can import normally from model_selection
-from sklearn.model_selection import HalvingRandomSearchCV
+from sklearn.model_selection import train_test_split, RandomizedSearchCV, cross_val_score, cross_val_predict, KFold
+from sklearn.base import clone
 
 # explicitly require this experimental feature
 from sklearn.experimental import enable_halving_search_cv 
 # now import normally from model_selection
 from sklearn.model_selection import HalvingRandomSearchCV
-# kfold for spliting
-from sklearn.model_selection import KFold
 
 
 # ------ Evaluation metrics ------
@@ -63,6 +59,8 @@ from rapidfuzz import process, fuzz
 
 # ------ Pipeline ------
 from sklearn.pipeline import Pipeline
+
+import joblib
 
 
 def normalize_text(x):
@@ -161,30 +159,7 @@ def calculate_regression_metrics(y_true, y_pred):
     return r2, mae, rmse
 
 
-def test_params(model, params, X_train, X_val, y_train, y_val):
-    model = model(**params)
-    model.fit(X_train, y_train)
-
-    # ---- Train Metrics ----
-    train_preds = model.predict(X_train)
-    train_r2, train_mae, train_rmse = calculate_regression_metrics(y_train, train_preds)
-
-    print("=== Train Metrics ===")
-    print(f"R² Score : {train_r2:.4f}")
-    print(f"MAE      : {train_mae:.2f}")
-    print(f"RMSE     : {train_rmse:.2f}\n")
-
-    # ---- Validation Metrics ----
-    val_preds = model.predict(X_val)
-    val_r2, val_mae, val_rmse = calculate_regression_metrics(y_val, val_preds)
-
-    print("=== Validation Metrics ===")
-    print(f"R² Score : {val_r2:.4f}")
-    print(f"MAE      : {val_mae:.2f}")
-    print(f"RMSE     : {val_rmse:.2f}")
-
-
-def evaluate_best_model_with_cv(best_model, X, y, cv=5):
+def evaluate_best_model_with_cv(best_model, X, y, model_name, cv=5):
     """
     Performs k-fold cross-validation and plots predictions vs actual values 
     for both train and validation folds.
@@ -216,7 +191,6 @@ def evaluate_best_model_with_cv(best_model, X, y, cv=5):
         y_val_fold = y.iloc[val_idx] if hasattr(y, 'iloc') else y[val_idx]
         
         # Clone and train model on this fold
-        from sklearn.base import clone
         fold_model = clone(best_model)
         fold_model.fit(X_train_fold, y_train_fold)
         
@@ -247,7 +221,7 @@ def evaluate_best_model_with_cv(best_model, X, y, cv=5):
                  [train_actuals.min(), train_actuals.max()], 'r--', lw=2, label='Perfect Prediction')
     axes[0].set_xlabel('Actual Values', fontsize=12)
     axes[0].set_ylabel('Predicted Values', fontsize=12)
-    axes[0].set_title(f'Training Results\nR²={train_r2:.4f}, MAE={train_mae:.2f}, RMSE={train_rmse:.2f}', 
+    axes[0].set_title(f'Training Results of {model_name}\nR²={train_r2:.4f}, MAE={train_mae:.2f}, RMSE={train_rmse:.2f}', 
                       fontsize=12, fontweight='bold')
     axes[0].legend()
     axes[0].grid(True, alpha=0.3)
@@ -258,7 +232,7 @@ def evaluate_best_model_with_cv(best_model, X, y, cv=5):
     axes[1].plot([y_min, y_max], [y_min, y_max], 'r--', lw=2, label='Perfect Prediction')
     axes[1].set_xlabel('Actual Values', fontsize=12)
     axes[1].set_ylabel('Predicted Values', fontsize=12)
-    axes[1].set_title(f'Validation Results\nR²={val_r2:.4f}, MAE={val_mae:.2f}, RMSE={val_rmse:.2f}', 
+    axes[1].set_title(f'Validation Resultsof {model_name}\nR²={val_r2:.4f}, MAE={val_mae:.2f}, RMSE={val_rmse:.2f}', 
                       fontsize=12, fontweight='bold')
     axes[1].legend()
     axes[1].grid(True, alpha=0.3)

@@ -14,6 +14,8 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
                  sev_outliers_cols = [],
                  threshold=3, # Pick 2 or 3 as the threshold value of "z"
                  z_columns = [],
+                 log_z_columns = [],
+                 log_columns = [],
                  contamination_IF=0.05, 
                  random_state=42,
                  n_neighbors=20, 
@@ -31,6 +33,10 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
         # Z-Score method parameters
         self.threshold = threshold
         self.z_columns = z_columns
+
+        # Log-transform parameters
+        self.log_columns = log_columns
+        self.log_z_columns = log_z_columns
 
         # Isolation Forest method parameters
         self.contamination_IF = contamination_IF
@@ -67,6 +73,27 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
             self.stds_ = {}
 
             for col in self.z_columns:
+                self.means_[col] = X_train[col].mean()
+                self.stds_[col] = X_train[col].std()
+
+        elif self.outlier_method == "log":
+
+            # Store offsets (only needed if min = 0)
+            self.log_offsets_ = {}
+
+            for col in self.log_columns:
+                min_val = X_train[col].min()
+
+                # If the column has non-positive values, shift it
+                if min_val <= 0:
+                    self.log_offsets_[col] = 1 - min_val
+                else:
+                    self.log_offsets_[col] = 0
+
+            self.means_ = {}
+            self.stds_ = {}
+
+            for col in self.log_z_columns:
                 self.means_[col] = X_train[col].mean()
                 self.stds_[col] = X_train[col].std()
 
@@ -136,6 +163,21 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
                                 self.means_[col] - self.threshold * self.stds_[col],
                                 self.means_[col] + self.threshold * self.stds_[col]
                             )
+            return X
+        
+        elif self.outlier_method == "log":
+
+            for col in self.log_columns:
+                offset = self.log_offsets_.get(col, 0)
+                X[col] = np.log(X[col] + offset)
+
+            for col in self.log_z_columns:
+
+                X[col] = np.clip(X[col],
+                                self.means_[col] - self.threshold * self.stds_[col],
+                                self.means_[col] + self.threshold * self.stds_[col]
+                            )
+
             return X
         
         elif self.outlier_method in ["Isolation_Forest", "LOF"]:
