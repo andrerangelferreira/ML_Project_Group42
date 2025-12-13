@@ -69,8 +69,11 @@ class NuestraPipeline(RegressorMixin, BaseEstimator):
 
         # Clone for sklearn compatibility
         self.model_ = clone(self.model)
-        self.model_.fit(X_clean, y_clean, sample_weight = sample_weights)
-        #self.model_.fit(X_clean, y_clean)
+        
+        try:
+            self.model_.fit(X_clean, y_clean, sample_weight=sample_weights)
+        except TypeError:
+            self.model_.fit(X_clean, y_clean)
 
         # Store for inspection
         self.X_ = X_clean

@@ -106,10 +106,15 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
             self.model_.fit(X_train[self.model_columns])
 
             preds = self.model_.predict(X_train[self.model_columns])  # +1 = normal, -1 = outlier
-            mask = preds == 1 #Storing the indexes from rows that are considered non outliers
+            # Find outlier indices
+            outlier_mask = (preds == -1)
             
-            self.X_ = X_train[mask]
-            self.y_ = y[mask]
+            # Cap outliers to the third quartile (75th percentile)
+            for col in self.model_columns:
+                q3 = X_train[col].quantile(0.75)
+                X_train.loc[outlier_mask, col] = q3
+            
+            self.X_ = X_train
 
         elif self.outlier_method == "LOF":
 
@@ -121,10 +126,15 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
             self.model_.fit(X_train[self.model_columns])
 
             preds = self.model_.predict(X_train[self.model_columns])  # +1 = normal, -1 = outlier
-            mask = preds == 1 #Storing the indexes from rows that are considered non outliers
+            # Find outlier indices
+            outlier_mask = (preds == -1)
             
-            self.X_ = X_train[mask]
-            self.y_ = y[mask]
+            # Cap outliers to the third quartile (75th percentile)
+            for col in self.model_columns:
+                q3 = X_train[col].quantile(0.75)
+                X_train.loc[outlier_mask, col] = q3
+            
+            self.X_ = X_train
 
         return self
     
@@ -182,7 +192,4 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
         
         elif self.outlier_method in ["Isolation_Forest", "LOF"]:
     
-            if self.y_ is not None:
-                return self.X_, self.y_
-            else:
-                return self.X_
+           return self.X_

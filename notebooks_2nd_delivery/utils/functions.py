@@ -25,6 +25,8 @@ from sklearn.experimental import enable_halving_search_cv
 # now import normally from model_selection
 from sklearn.model_selection import HalvingRandomSearchCV
 
+from skopt import BayesSearchCV
+from skopt.space import Real, Categorical, Integer
 
 # ------ Evaluation metrics ------
 from sklearn.metrics import (
