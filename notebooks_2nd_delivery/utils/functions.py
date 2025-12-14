@@ -1,3 +1,6 @@
+# ------ IMPORTS ------
+
+
 # ------ Standard Library Imports ------
 import math
 import re
@@ -62,6 +65,12 @@ from sklearn.pipeline import Pipeline
 
 import joblib
 
+
+
+
+
+
+# ------ FUNCTIONS CREATED THROUGHOUT THE PROJECT ------
 
 def normalize_text(x):
     if pd.isna(x):
