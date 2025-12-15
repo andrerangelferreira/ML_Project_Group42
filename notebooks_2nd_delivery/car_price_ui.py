@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import joblib
+from pathlib import Path
 
 # ---------------- CONFIG ----------------
 st.set_page_config(page_title="Cars 4 You - Price Estimator")
@@ -11,7 +12,21 @@ st.write("Enter the car details to estimate its resale price.")
 # ---------------- LOAD MODEL ----------------
 @st.cache_resource
 def load_model():
-    return joblib.load("models/models_organized/hgb_params.pkl")
+    import joblib
+    from pathlib import Path
+
+    possible_paths = [
+        Path("models/models_organized/hgb_params.pkl"),
+        Path("notebooks_2nd_delivery/models/models_organized/hgb_params.pkl")
+    ]
+
+    for path in possible_paths:
+        if path.exists():
+            return joblib.load(path)
+
+    raise FileNotFoundError(
+        "Trained model file not found in expected locations."
+    )
 
 model_pipeline = load_model()
 
