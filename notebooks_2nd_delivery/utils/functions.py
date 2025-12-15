@@ -142,27 +142,6 @@ def num_per_cat(data, numerical_var, cat_var):
     plt.show()
 
 
-def boxplotter(data, metric_features, n_rows, n_cols):
-
-    # Plot ALL Numeric Variables' Histograms in one figure
-
-    sns.set(style= "darkgrid", context= "notebook") ## Reset to darkgrid
-
-    # Prepare figure. Create individual axes where each histogram will be placed
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 10),tight_layout=True)
-
-    # Plot data
-    # Iterate across axes objects and associate each histogram (hint: use the ax.hist() instead of plt.hist()):
-    for ax, feat in zip(axes.flatten(), metric_features): # Notice the zip() function and flatten() method
-        sns.boxplot(x=data[feat], ax=ax)
-        
-    # Layout
-    # Add a centered title to the figure:
-    plt.suptitle("Numeric Variables' Box Plots", fontsize=20, y=1.02, fontweight='bold')
-    plt.show()
-
-def custom_combiner(feature, category):
-    return f"{category}"
 
 def correlation_matrix(data, threshold):
 
@@ -201,22 +180,7 @@ def correlation_matrix(data, threshold):
 
     plt.show()
 
-def TestIndependence(X,y,var,alpha=0.05):        
-    dfObserved = pd.crosstab(y,X) 
-    chi2, p, dof, expected = stats.chi2_contingency(dfObserved.values)
-    dfExpected = pd.DataFrame(expected, columns=dfObserved.columns, index = dfObserved.index)
-    if p<alpha:
-        result="{0} is IMPORTANT for Prediction".format(var)
-    else:
-        result="{0} is NOT an important predictor. (Discard {0} from model)".format(var)
-    print(result)
 
-def plot_importance(coef,name):
-    imp_coef = coef.sort_values()
-    plt.figure(figsize=(8,10))
-    imp_coef.plot(kind = "barh")
-    plt.title("Feature importance using " + name + " Model")
-    plt.show()
 
 def calculate_regression_metrics(y_true, y_pred):
     
