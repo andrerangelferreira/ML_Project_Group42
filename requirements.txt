@@ -3,4 +3,9 @@ pandas
 numpy
 scikit-learn
 joblib
+matplotlib
+seaborn
+scipy
+scikit-optimize
 category-encoders
+rapidfuzz
