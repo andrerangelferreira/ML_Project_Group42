@@ -87,7 +87,6 @@ class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
             return DecisionTreeRegressor(random_state=self.random_state)
 
         #Gradient Boosting models
-
         elif self.model_name == "gboost":
             return GradientBoostingRegressor(random_state=self.random_state)
 
@@ -100,11 +99,6 @@ class FeatureSelectionDealer(BaseEstimator, TransformerMixin):
         #Suport Vector Machine regression model
         elif self.model_name == "svm":
             return SVR()
-
-        #K-Nearest Neighbours model
-
-        elif self.model_name == "knn":
-            return KNeighborsRegressor()
         
         #Multi-Layer Percepton model
         elif self.model_name == "mlp":
