@@ -4,6 +4,22 @@ import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 
+"""
+The ScalingDealer class is responsible for scaling the dataset after all
+previous preprocessing transformations have been applied and before the
+data is passed to the model.
+
+The class includes a parameter, "scaler_name", which allows the user to
+choose the scaling method to apply. The available options are
+StandardScaler, MinMaxScaler, and RobustScaler.
+
+Additionally, the class handles cases where One-Hot Encoding is used in
+the encoding class. In this scenario, the encoded categorical columns are
+not scaled. However, when other encoding methods are applied (e.g., target encoding),
+the resulting encoded features are treated as numerical variables and
+are therefore scaled before being passed to the model.
+
+"""
 
 class ScalingDealer(BaseEstimator, TransformerMixin):
 

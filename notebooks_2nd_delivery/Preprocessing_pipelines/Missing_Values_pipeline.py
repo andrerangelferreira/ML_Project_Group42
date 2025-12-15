@@ -7,6 +7,60 @@ from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 
+"""
+MissingValuesDealer is a custom class designed to be used within our custom
+data processing pipeline, specifically to handle and impute missing values
+in the dataset.This class provides multiple strategies for missing value imputation. 
+Some of these strategies rely on existing imputation methods, such as
+SimpleImputer and IterativeImputer, while others are custom approaches
+developed for this project, namely knn_brandwise and knn_modelwise.
+
+The class implements two main methods: fit and transform. During the fit
+stage, the selected imputer (and scalers, in the case of KNN-based methods)
+is fitted and stored. During the transform stage, the stored imputers are
+applied to the input data to fill all missing values.
+
+Imputation methods implemented:
+
+- SimpleImputer:
+  Imputes missing values using a constant strategy such as the mean.
+
+- KNN Imputer:
+  Uses a KNN-based approach to fill missing values. Since KNN imputation is
+  sensitive to feature scaling, the data is scaled before imputation. The
+  scaling method can be controlled via the knn_scaling_method parameter, and
+  the number of neighbors via the knn_neighbors parameter.
+
+- Iterative Imputer:
+  Fills missing values using a multivariate approach by iteratively predicting
+  each feature with missing data based on the other features in the dataset.
+
+- knn_brandwise:
+  A custom imputation method that applies KNN imputation separately within
+  each brand group, under the assumption that vehicles from the same brand
+  are more similar. During fitting, a separate scaler and imputer are stored
+  for each brand. This method also uses the knn_scaling_method and
+  knn_neighbors parameters.
+
+- knn_modelwise:
+  A more granular version of knn_brandwise that applies KNN imputation within
+  each model group. Due to the large number of distinct models, some models
+  may have too few samples to apply KNN reliably. These are treated as rare
+  models.
+
+  For models with fewer samples than a predefined threshold, missing values
+  are imputed using the median of that model. This threshold is controlled by
+  the min_model_size_for_knn parameter.
+
+  In cases where a model contains only missing values for a given feature or
+  when unseen models appear during transformation, a global KNN imputer is
+  used as a fallback strategy.
+
+
+  All the categorical values where filled with the SimpleImputer with the most_frequent value.
+"""
+
+
 
 class MissingValuesDealer(BaseEstimator, TransformerMixin):
 

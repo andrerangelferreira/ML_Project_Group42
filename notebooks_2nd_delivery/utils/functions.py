@@ -1,6 +1,17 @@
+
+
+"""
+The functions.py file is where we place all the imports used in our project
+so that we don't have to write them at the beginning of each notebook.
+This way, we only need to import everything from functions.
+
+This file is also where we define all the functions
+ used throughout the project, along with a description of each one.
+
+"""
+
+
 # ------ IMPORTS ------
-
-
 # ------ Standard Library Imports ------
 import math
 import re
@@ -22,6 +33,8 @@ from sklearn.preprocessing import (
 )
 from sklearn.model_selection import train_test_split, RandomizedSearchCV, cross_val_score, cross_val_predict, KFold
 from sklearn.base import clone
+from skopt import BayesSearchCV
+from skopt.space import Real, Categorical, Integer
 
 # explicitly require this experimental feature
 from sklearn.experimental import enable_halving_search_cv 
@@ -62,7 +75,6 @@ from rapidfuzz import process, fuzz
 
 # ------ Pipeline ------
 from sklearn.pipeline import Pipeline
-
 import joblib
 
 
@@ -73,6 +85,20 @@ import joblib
 # ------ FUNCTIONS CREATED THROUGHOUT THE PROJECT ------
 
 def normalize_text(x):
+    
+    """
+    normalize_text is a function used in the data cleaning part of our project.
+    It cleans and normalizes text by converting to lowercase,
+    removing special characters, trimming whitespace, and collapsing multiple spaces.
+
+    Parameters:
+    X: any value to be normalize.
+
+    Returns:
+    normalized value or NaN if the value given is a missing value
+    
+    """
+
     if pd.isna(x):
         return np.nan
     x = str(x).lower().strip()  # lowercase + remove spaces
@@ -80,7 +106,26 @@ def normalize_text(x):
     x = re.sub(r'\s+', ' ', x)  # collapse multiple spaces
     return x
 
+
+
+
 def num_per_cat(data, numerical_var, cat_var):
+
+    """
+    num_per_cat is a function built to create a plot that compare the average value of
+    a numeric feature with the unique values of a specific categorical feature,
+    for example we used it to analyse the average price per brand in the EDA.
+
+    Parameters:
+    data : The dataset used to generate the plot.
+
+    numerical_var : The name of the numerical column to be averaged.
+    cat_var : The name of the categorical column used for grouping.
+
+    Returns: None, display a bar plot.
+    
+    """
+
     sns.set()
 
     # Computing mean income per education level
@@ -120,6 +165,19 @@ def custom_combiner(feature, category):
     return f"{category}"
 
 def correlation_matrix(data, threshold):
+
+    """
+    correlation_matrix plots a Pearson correlation matrix heatmap for numerical features in a dataset,
+    displaying correlation values only when their absolute value exceeds a given
+    threshold. We used it to analyse the correlation between our numerical features in EDA.
+
+    Parameters:
+    data : Input dataset containing numerical variables.
+    
+    threshold : Minimum absolute correlation value required for a cell to be annotated
+
+    Returns: None, displays a correlation heatmap.
+    """
     
     corr = data.corr(method="pearson")
     corr = corr.round(2)
@@ -176,7 +234,7 @@ def evaluate_best_model_with_cv(best_model, X, y, model_name, cv=5):
     Parameters:
     -----------
     best_model : sklearn estimator
-        The best model from RandomizedSearchCV (best_estimator_)
+        The best model from a Search technique (best_estimator_)
     X : array-like
         Feature matrix
     y : array-like
