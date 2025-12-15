@@ -234,7 +234,7 @@ def evaluate_best_model_with_cv(best_model, X, y, model_name, cv=5):
     axes[1].plot([y_min, y_max], [y_min, y_max], 'r--', lw=2, label='Perfect Prediction')
     axes[1].set_xlabel('Actual Values', fontsize=12)
     axes[1].set_ylabel('Predicted Values', fontsize=12)
-    axes[1].set_title(f'Validation Resultsof {model_name}\nR²={val_r2:.4f}, MAE={val_mae:.2f}, RMSE={val_rmse:.2f}', 
+    axes[1].set_title(f'Validation Results of {model_name}\nR²={val_r2:.4f}, MAE={val_mae:.2f}, RMSE={val_rmse:.2f}', 
                       fontsize=12, fontweight='bold')
     axes[1].legend()
     axes[1].grid(True, alpha=0.3)
