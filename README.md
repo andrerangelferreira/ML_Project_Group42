@@ -13,11 +13,12 @@ Nova IMS | MSc in Data Science | 2025/2026
 ## Project Notebooks
 | Stage | Notebook | Description |
 |--------|-----------|-------------|
-| Data Understanding | [01_data_understanding.ipynb](notebooks/01_data_understanding.ipynb) | Exploratory Data Analysis |
-| Preprocessing | [02_data_preprocessing.ipynb](notebooks/02_data_preprocessing.ipynb) | Data cleaning, encoding, scaling |
-| Feature Selection | [03_feature_selection.ipynb](notebooks/03_feature_selection.ipynb) | Feature importance and selection |
-| Modeling | [04_model_training.ipynb](notebooks/04_model_training.ipynb) | Regression model training |
-| Evaluation | [05_evaluation.ipynb](notebooks/05_evaluation.ipynb) | Model performance and insights |
+| Data Cleaning (Testing) | [0.1.Test_Cleaning.ipynb](0.1.Test_Cleaning.ipynb) | Initial tests and validation of cleaning steps |
+| Exploratory Data Analysis | [0.Exploratory_Data_Analysis.ipynb](0.Exploratory_Data_Analysis.ipynb) | Exploratory Data Analysis (EDA) |
+| Models & Parameters Tests | [1.Models_and_params_tests.ipynb](1.Models_and_params_tests.ipynb) | Testing models and parameter combinations |
+| Model Optimization (Phase 1) | [2.Model_Optimization_phase1.ipynb](2.Model_Optimization_phase1.ipynb) | Hyperparameter tuning / optimization phase 1 |
+| Modelling (2nd Phase) | [3.Modelling_2nd_phase.ipynb](3.Modelling_2nd_phase.ipynb) | Final modelling phase and results |
+
 
 ---
 
